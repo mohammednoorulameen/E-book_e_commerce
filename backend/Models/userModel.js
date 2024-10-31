@@ -19,16 +19,32 @@ const userSchema = mongoose.Schema({
         type : String,
         default : null
     },
-    status : {
+    googleId : {
+        type : String,
+        unique : true,
+        sparse : true,
+    },
+    isActive : {
         type : Boolean,
-        default : false
+        default : true,
     },
-    date : {
-        type : Date,
-        default : null
+    isVerified : {
+        type : Boolean,
+        required :true,
     },
-    role : { type : String , enum : ['user','admin'], default:'user'}
-})
+    isAdmin : {
+        type : Boolean,
+        default : false,
+    },
+    otp : {
+        type : String
+    },
+    otpExpireAt : {
+        type : Date
+    },
+},
+{timestamps : true})
+
 
 const User = mongoose.model('User',userSchema)
 export default User
