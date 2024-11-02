@@ -57,7 +57,7 @@ const Otp = () => {
         setOtp("");
         setError("");
         dispatch(setCredentails(response.access_token));
-        navigate("/");
+        navigate("/login");
       }
       console.log("OTP Submitted:", otp);
     } catch (error) {

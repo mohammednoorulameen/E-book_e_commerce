@@ -32,7 +32,7 @@ const Login = () => {
         const response = await login(userData).unwrap();
         if (response && response.access_token) {
           dispatch(setCredentails({accessToken : response.access_token}));
-          navigate("/login");
+          navigate("/");
         }
         if (response.status === 401) {
           navigate(`/verifyotp/${errorData.userId}`);
@@ -61,7 +61,7 @@ const Login = () => {
         {isError && (
           <div className="flex justify-center items-center ">
             <span className="text-center text-red-500">
-              {authError?.data?.message || "login failed"}
+              {authError?.data?.message || "login failed or OTP is not verified"}
             </span>
           </div>
         )}

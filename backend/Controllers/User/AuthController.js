@@ -154,7 +154,7 @@ const VerifyOtp = async (req, res) => {
         .json({ message: "your otp is expired or incorrect" });
     }
 
-    user.verifyOtp = true;
+    user.isVerified = true;
     await user.save();
     await Otp.deleteOne({ userId: req.body.userId });
 
@@ -224,20 +224,20 @@ const Login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
     if (!user) {
-      res.status(401).json({ message: "invalid credential" });
+     return res.status(401).json({ message: "invalid credential" });
     }
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (isPasswordMatch) {
-      res.status(401).json({ message: "invalid credential" });
+    if (!isPasswordMatch) {
+    return  res.status(401).json({ message: "invalid credential" });
     }
     if (!user.isVerified) {
       return res
         .status(401)
-        .json({ message: "an otp is send to your email", userId: user._id });
+        .json({ message: " otp is send to your email", userId: user._id });
     }
 
     if (!user.isActive) {
-      res.status(403).json({ message: "Sorry, You were Blocked Admin" });
+    return  res.status(403).json({ message: "Sorry, You were Blocked Admin" });
     }
     const access_token = await AccessToken({ id: user._id }); // generate access tken
     const refresh_token = await RefreshToken({ id: user._id }); // generate refresh token
