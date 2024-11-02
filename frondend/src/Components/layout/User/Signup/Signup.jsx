@@ -1,5 +1,6 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { useRegisterMutation } from "../../../../Services/Apis/UserApi/UserApi.js";
@@ -28,7 +29,9 @@ const validationSchema = Yup.object().shape({
 });
 
 const Signup = () => {
-  const [register]=useRegisterMutation()
+  const [showPassword, setShowPassword] = useState(false);
+  const [register,{data, isSuccess, isError}]=useRegisterMutation()
+  const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
       username: "",
@@ -45,6 +48,14 @@ const Signup = () => {
       } catch (error) {}
     },
   });
+  // console.log("check data",data)
+
+  useEffect(()=>{
+    if (isSuccess && data?.userId) {
+      navigate(`/verifyotp/${data?.userId}`)
+    }
+
+  },[isSuccess,navigate])
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
@@ -54,7 +65,9 @@ const Signup = () => {
             Create Your Account
           </h2>
         </div>
-
+        {isSuccess && (
+          <h3 className="text-green-500">Signup successfull</h3>
+        )}
         <div className=" mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
           <form onSubmit={formik.handleSubmit} className="mt-6 space-y-6 pt-2">
             <div>
@@ -127,17 +140,30 @@ const Signup = () => {
                 >
                   Password
                 </label>
-                <div className="mt-2">
+                <div className="mt-2 relative">
                   <input
                     id="password"
                     name="password"
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    type="password"
+                    // type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     className="w-full p-2  border border-black focus:outline-none focus:ring-1 focus:ring-black"
                   />
+                  
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-2 flex items-center"
+          >
+            {showPassword ? (
+              < Eye className="h-5 w-5 text-gray-500" />
+            ) : (
+              < EyeOff className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
                 </div>
               </div>
               {formik.touched.password && formik.errors.password && (
