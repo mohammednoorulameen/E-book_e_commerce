@@ -1,11 +1,12 @@
 import express from "express";
 const userRouter = express.Router()
-import {register, ResendOtp, verifyOtp} from "../Controllers/User/AuthController.js";
+import {Register, ResendOtp, VerifyOtp, Login, } from "../Controllers/User/AuthController.js";
 
 
-userRouter.post('/register',register)
-userRouter.post('/verifyOtp',verifyOtp)
+userRouter.post('/register',Register)
+userRouter.post('/verifyOtp',VerifyOtp)
 userRouter.post('/resendOtp',ResendOtp)
+userRouter.post('/login', Login)
 
 
 

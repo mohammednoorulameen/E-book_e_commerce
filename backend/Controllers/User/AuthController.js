@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { access } from "fs";
 // const maxage = 3 * 24 * 60 * 60;
 const maxage = 7 * 24 * 60 * 60 * 1000;
 dotenv.config();
@@ -62,10 +63,37 @@ const GenerateOtp = async (user) => {
 };
 
 /*
-signUp user 
+user refreshing token 
 */
 
-const register = async (req, res) => {
+const RefreshingToken = (req, res) => {
+  const cookies = req.cookies.jwt;
+  if (!cookies) {
+    return res.status(401).json({ message: "Unatherized Access" });
+  }
+  jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
+    try {
+      if (err) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const userData = await User.findById(user.id);
+      if (!userData || !userData.isActive) {
+        return res.status(401).json({ message: "Unauthourized" });
+      }
+
+      const access_token = AccessToken({ id: userData._id, isAdmin: true });
+      res.json({ access_token });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+};
+
+/*
+user signUp  
+*/
+
+const Register = async (req, res) => {
   console.log(req.body);
 
   try {
@@ -90,9 +118,9 @@ const register = async (req, res) => {
     console.log("otp:", otp);
 
     res.status(200).json({
-     message: "Successfully Registration, OTP Send Successfully",
-     userId: userData._id,
-   });
+      message: "Successfully Registration, OTP Send Successfully",
+      userId: userData._id,
+    });
 
     await sendVerificationMail(
       {
@@ -102,7 +130,6 @@ const register = async (req, res) => {
       },
       otp
     );
-
   } catch (error) {
     console.log("error register", error);
 
@@ -114,7 +141,7 @@ const register = async (req, res) => {
 verify user otp
 */
 
-const verifyOtp = async (req, res) => {
+const VerifyOtp = async (req, res) => {
   try {
     const user = await User.findById(req.body.userId);
     if (!user) {
@@ -126,6 +153,7 @@ const verifyOtp = async (req, res) => {
         .status(404)
         .json({ message: "your otp is expired or incorrect" });
     }
+
     user.verifyOtp = true;
     await user.save();
     await Otp.deleteOne({ userId: req.body.userId });
@@ -155,9 +183,9 @@ user resend otp
 
 const ResendOtp = async (req, res) => {
   try {
-    console.log(req.body)
+    console.log(req.body);
     const { userId } = req.body;
-    const user = await User.findById({_id: userId });
+    const user = await User.findById({ _id: userId });
 
     if (!user) {
       return res.status(404).json({ message: "user cannot find" });
@@ -173,15 +201,17 @@ const ResendOtp = async (req, res) => {
       .status(200)
       .json({ message: "New Otp Send Successfully, Check Your Email" });
 
-    await sendVerificationMail({
-      email: user.email,
-      username: user.username,
-      phone: user.phone,
-    },otp);
+    await sendVerificationMail(
+      {
+        email: user.email,
+        username: user.username,
+        phone: user.phone,
+      },
+      otp
+    );
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "internal server error" })
-    
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -189,5 +219,41 @@ const ResendOtp = async (req, res) => {
 user login
 */
 
+const Login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      res.status(401).json({ message: "invalid credential" });
+    }
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (isPasswordMatch) {
+      res.status(401).json({ message: "invalid credential" });
+    }
+    if (!user.isVerified) {
+      return res
+        .status(401)
+        .json({ message: "an otp is send to your email", userId: user._id });
+    }
 
-export { register, verifyOtp, ResendOtp,  };
+    if (!user.isActive) {
+      res.status(403).json({ message: "Sorry, You were Blocked Admin" });
+    }
+    const access_token = await AccessToken({ id: user._id }); // generate access tken
+    const refresh_token = await RefreshToken({ id: user._id }); // generate refresh token
+
+    res.cookie("jwt", refresh_token, {
+      httOnly: true,
+      secure: false,
+      ExpireAt: maxage,
+    });
+    await res
+      .status(200)
+      .json({ message: " User Login Successfully ", access_token });
+  } catch (error) {
+    console.log("error login :", error);
+    res.status(500).json({ message: "Internal serer error" });
+  }
+};
+
+export { Register, VerifyOtp, ResendOtp, Login };

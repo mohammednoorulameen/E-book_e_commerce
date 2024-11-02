@@ -9,6 +9,7 @@ const authSlice =createSlice({
         setCredentails: (state, action)=> {
             const { accessToken } = action.payload;
             state.token = accessToken;
+            console.log("check token ",state.token)
         }
     }
 })

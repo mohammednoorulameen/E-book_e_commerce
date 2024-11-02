@@ -34,7 +34,19 @@ export const UserApi = apiInstance.injectEndpoints({
             method: "POST",
             body: userId
         })
-    })
+    }),
+
+    /*
+    user login 
+    */
+
+    login: builder.mutation({
+        query: (form)=> ({
+            url: "/user/login",
+            method: "POST",
+            body: form
+        })
+    }),
 
     /*
     */
@@ -49,5 +61,6 @@ export const {
 useRegisterMutation,
 useVerifyOtpMutation,
 useResendOtpMutation,
+useLoginMutation,
 
 } = UserApi
