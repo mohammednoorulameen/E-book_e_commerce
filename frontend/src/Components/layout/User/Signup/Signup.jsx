@@ -30,7 +30,7 @@ const validationSchema = Yup.object().shape({
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [register,{data, isSuccess, isError}]=useRegisterMutation()
+  const [register,{data, isSuccess, isError, error : authError}]=useRegisterMutation()
   const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
@@ -65,14 +65,21 @@ const Signup = () => {
             Create Your Account
           </h2>
         </div>
+        {isError && (
+         <div className="flex justify-center mt-5">
+         <span className="text-center text-red-700">{authError?.data?.message}
+         </span>
+       </div>
+        )}
         {isSuccess && (
           <h3 className="text-green-500">Signup successfull</h3>
         )}
+        
         <div className=" mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
           <form onSubmit={formik.handleSubmit} className="mt-6 space-y-6 pt-2">
             <div>
               <div className="">
-                <label className="block text-sm font-medium leading-6 text-gray-900">
+                <label className="block text-sm font-medium text-gray-900">
                   User Name
                 </label>
                 <div className="mt-2">
@@ -227,7 +234,7 @@ const Signup = () => {
               >
                 <div className="mx-auto flex">
                   <p className=" font-tertiary  ms-5 font-semibold ">
-                    Login With Google
+                    Continue With Google
                   </p>
                 </div>
               </button>

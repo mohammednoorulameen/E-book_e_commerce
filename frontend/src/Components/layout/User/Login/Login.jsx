@@ -16,7 +16,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const Login = () => {
-  const [login, { isloading, isError, isSuccess, error: authError }] =
+  const [login, {  isError, isSuccess, error: authError }] =
     useLoginMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -34,16 +34,8 @@ const Login = () => {
           dispatch(setCredentails({accessToken : response.access_token}));
           navigate("/");
         }
-        if (response.status === 401) {
-          navigate(`/verifyotp/${errorData.userId}`);
-        }
-        console.log("response" ,response)
       } catch (error) {
         console.log("error : ", error);
-        // const errorData = error?.data || error?.response?.data;
-        //   if (error) {
-        //     navigate(`/verifyotp/${errorData.userId}`);
-        //   }
       }
     },
   });
@@ -61,7 +53,7 @@ const Login = () => {
         {isError && (
           <div className="flex justify-center items-center ">
             <span className="text-center text-red-500">
-              {authError?.data?.message || "login failed or OTP is not verified"}
+              {authError?.data?.message}
             </span>
           </div>
         )}
@@ -161,7 +153,7 @@ const Login = () => {
               >
                 <div className="mx-auto flex">
                   <p className=" font-tertiary  ms-5 font-semibold ">
-                    Login With Google
+                    Continue With Google
                   </p>
                 </div>
               </button>

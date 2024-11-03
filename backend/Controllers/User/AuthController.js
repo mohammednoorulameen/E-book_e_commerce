@@ -98,8 +98,26 @@ const Register = async (req, res) => {
 
   try {
     const userExist = await User.findOne({ email: req.body.email });
-    if (userExist) {
-      return res.status(400).json({ message: "User already exist" });
+    if (userExist ) {
+      if (userExist.isVerified) {
+
+        return res.status(400).json({ message: "User already exist and is verified" });
+      }else{
+        const otp = await GenerateOtp(userExist); // otp generate again
+        console.log("Resending OTP:", otp);
+        await sendVerificationMail(
+          {
+            email: userExist.email,
+            username: userExist.username,
+            phone: userExist.phone,
+          },
+          otp
+        );
+        return res.status(200).json({
+          message: "User already exists but is not verified. OTP resent successfully.",
+          userId: userExist._id,
+        });
+      }
     }
     const hashedPassword = await HashPassword(req.body.password);
     const user = await User.create({
@@ -224,16 +242,16 @@ const Login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
     if (!user) {
-     return res.status(401).json({ message: "invalid credential" });
+     return res.status(404).json({ message: "invalid credential" });
     }
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-    return  res.status(401).json({ message: "invalid credential" });
+    return  res.status(404).json({ message: "invalid credential" });
     }
     if (!user.isVerified) {
       return res
-        .status(401)
-        .json({ message: " otp is send to your email", userId: user._id });
+        .status(404)
+        .json({ message: "OTP not verified,sent otp your email", userId: user._id });
     }
 
     if (!user.isActive) {

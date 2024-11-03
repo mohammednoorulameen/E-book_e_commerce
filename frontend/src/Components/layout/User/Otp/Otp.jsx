@@ -94,7 +94,7 @@ const Otp = () => {
        </div>
         )}
         {verifyError && (
-         <div className="flex justify-center items- mb-3">
+         <div className="flex justify-center items-center mb-3">
          <span className="text-center text-gray-700">
            {verifyError?.data?.message || "Failed OTP Verification"}
          </span>
