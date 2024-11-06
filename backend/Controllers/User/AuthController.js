@@ -1,93 +1,17 @@
+/*======================================== USER AUTHENTICATION CONTROLLER ======================================== */
+
 import User from "../../Models/userModel.js";
 import Otp from "../../Models/OtpModel.js";
 import sendVerificationMail from "../../Utils/mailerService.js";
+import { AccessToken, RefreshToken } from "../../Utils/Tokens.js";
+import { HashPassword } from "../../Utils/HashPassword.js";
+import { GenerateOtp } from "../../Utils/GenerateOtp.js";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { access } from "fs";
-// const maxage = 3 * 24 * 60 * 60;
 const maxage = 7 * 24 * 60 * 60 * 1000;
 dotenv.config();
-
-/*
-create access token
-*/
-
-const AccessToken = (id) => {
-  return jwt.sign({ id }, process.env.ACCESS_TOKEN, {
-    expiresIn: "30m",
-  });
-};
-
-/*
-create a refresh token
-*/
-
-const RefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.REFRESH_TOKEN, {
-    expiresIn: "7d",
-  });
-};
-
-/*
-hashing password from password
-*/
-
-const HashPassword = async (password) => {
-  try {
-    return await bcrypt.hash(password, 10);
-  } catch (error) {
-    console.log(error, "password hash error");
-  }
-};
-
-/*
-generate otp 
-*/
-
-const GenerateOtp = async (user) => {
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const otpExpiresAt = Date.now();
-  const id = user._id || user.userId;
-  console.log("check id ", id);
-
-  const newOtp = new Otp({
-    userId: id,
-    otp,
-    otpExpiresAt,
-  });
-
-  await newOtp.save();
-  return otp;
-};
-
-/*
-user refreshing token 
-*/
-
-const RefreshingToken = (req, res) => {
-  const cookies = req.cookies.jwt;
-  if (!cookies) {
-    return res.status(401).json({ message: "Unatherized Access" });
-  }
-  jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
-    try {
-      if (err) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const userData = await User.findById(user.id);
-      if (!userData || !userData.isActive) {
-        return res.status(401).json({ message: "Unauthourized" });
-      }
-
-      const access_token = AccessToken({ id: userData._id, isAdmin: true });
-      res.json({ access_token });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-};
+// const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 
 /*
 user signUp  
@@ -98,11 +22,12 @@ const Register = async (req, res) => {
 
   try {
     const userExist = await User.findOne({ email: req.body.email });
-    if (userExist ) {
+    if (userExist) {
       if (userExist.isVerified) {
-
-        return res.status(400).json({ message: "User already exist and is verified" });
-      }else{
+        return res
+          .status(400)
+          .json({ message: "User already exist and is verified" });
+      } else {
         const otp = await GenerateOtp(userExist); // otp generate again
         console.log("Resending OTP:", otp);
         await sendVerificationMail(
@@ -114,7 +39,8 @@ const Register = async (req, res) => {
           otp
         );
         return res.status(200).json({
-          message: "User already exists but is not verified. OTP resent successfully.",
+          message:
+            "User already exists but is not verified. OTP resent successfully.",
           userId: userExist._id,
         });
       }
@@ -181,7 +107,7 @@ const VerifyOtp = async (req, res) => {
 
     // send refresh token
     res.cookie("jwt", refresh_token, {
-      httOnly: true,
+      httpOnly: true,
       secure: false,
       maxAge: maxage,
     });
@@ -242,26 +168,27 @@ const Login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
     if (!user) {
-     return res.status(404).json({ message: "invalid credential" });
+      return res.status(404).json({ message: "invalid credential" });
     }
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-    return  res.status(404).json({ message: "invalid credential" });
+      return res.status(404).json({ message: "invalid credential" });
     }
     if (!user.isVerified) {
-      return res
-        .status(404)
-        .json({ message: "OTP not verified,sent otp your email", userId: user._id });
+      return res.status(404).json({
+        message: "OTP not verified, Please register again",
+        userId: user._id,
+      });
     }
 
     if (!user.isActive) {
-    return  res.status(403).json({ message: "Sorry, You were Blocked Admin" });
+      return res.status(403).json({ message: "Sorry, You were Blocked Admin" });
     }
     const access_token = await AccessToken({ id: user._id }); // generate access tken
     const refresh_token = await RefreshToken({ id: user._id }); // generate refresh token
 
-    res.cookie("jwt", refresh_token, {
-      httOnly: true,
+    res.cookie("userjwt", refresh_token, {
+      httpOnly: true,
       secure: false,
       ExpireAt: maxage,
     });
@@ -274,4 +201,40 @@ const Login = async (req, res) => {
   }
 };
 
-export { Register, VerifyOtp, ResendOtp, Login };
+
+/*
+user refreshing token 
+*/
+
+// const RefreshingToken = async (req, res) => {
+//   const refreshToken = req.cookies.jwt;
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: "Unatherized Access" });
+//   }
+//   try {
+//     const decode = jwt.verify(RefreshingToken, REFRESH_TOKEN);
+//     const user = await User.findById(decode.userId);
+//     // jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
+//     if (!user) {
+//       return res.status(403).json({ message: "user not found" });
+//     }
+//     // const userData = await User.findById(user.id);
+//     // if (!userData || !userData.isActive) {
+//     //   return res.status(401).json({ message: "Unauthourized" });
+//     // }
+
+//     const access_token = AccessToken({ id: userData._id, isAdmin: true });
+//     const referesh_token = RefreshToken({ id: userData._id, isAdmin: true });
+//     res.cookie("refreshToken", referesh_token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV !== "development",
+//       maxAge: 7 * 24 * 60 * 60 * 1000,
+//     });
+//     res.json({ access_token });
+//   } catch (error) {
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+//   // });
+// };
+
+export { Register, VerifyOtp, ResendOtp, Login, };

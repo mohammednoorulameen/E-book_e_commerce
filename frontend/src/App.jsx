@@ -1,24 +1,48 @@
 
 import './App.css'
+import AdminRouter from './Routers/AdminRouter'
 import UserRouter from './Routers/UserRouter'
-import {BrowserRouter, Routes, Route} from 'react-router-dom'
+import { createBrowserRouter, RouterProvider} from 'react-router-dom'
 
-function App() {
 
+const routes = [...UserRouter,...AdminRouter];
+const router = createBrowserRouter(routes)
+
+
+
+
+ function App() {
 
   return (
     <>
-      <div>
-      <BrowserRouter>
-        <Routes>
-
-          <Route  path='/*' element={< UserRouter />} />
-
-        </Routes>
-       </BrowserRouter>
-      </div>
+    <RouterProvider router={router} />
     </>
   )
-}
+ }
 
-export default App
+ export default App
+
+ 
+
+// function App() {
+
+
+//   return (
+//     <>
+//       <div>
+//       <BrowserRouter>
+//         <Routes>
+
+//           <Route  path='/*' element={< UserRouter />} />
+//           <Route  path='/admin/*' element={< AdminRouter />} />
+
+//         </Routes>
+//        </BrowserRouter>
+//       </div>
+//     </>
+//   )
+// }
+
+// export default App
+
+

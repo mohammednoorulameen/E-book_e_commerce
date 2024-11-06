@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import { useRegisterMutation } from "../../../../Services/Apis/UserApi/UserApi.js";
+import { useRegisterMutation } from "../../../../Services/Apis/UserApi.js";
 
 const validationSchema = Yup.object().shape({
   username: Yup.string()

@@ -1,9 +1,5 @@
-// // import axios from 'axios'
 // import { createApi, fetchBaseQuery  } from "@reduxjs/toolkit/query/react";
-
-// // const apiInstance = axios.create({
-// //     baseURL:"http://localhost:4040",
-// // })
+// import { setCredentials } from "../../Redux/Slice/AuthSlice.js";
 
 // const baseQuery = fetchBaseQuery({
 //     baseUrl: "http://localhost:4040/api",
@@ -39,7 +35,7 @@
 
 
 // const apiInstance = createApi({
-//     reducerPath: "api",
+//     reducerPath: "apiInstance",
 //     baseQuery: baseQueryWithReauth,
 //     endpoints: () => ({}),
 // })
@@ -47,13 +43,20 @@
 // export default apiInstance
 
 
+
+
 import { createApi, fetchBaseQuery  } from "@reduxjs/toolkit/query/react";
+import { setCredentials } from "../../Redux/Slice/AuthSlice.js";
+
+
 const baseQuery = fetchBaseQuery({
     baseUrl: "http://localhost:4040/api",
     credentials: "include",
     prepareHeaders: (Headers, {getState}) =>{
         const token =  getState().auth.token;
-        if (token) Headers.set("authorization", `Bearer ${token}`);
+        if (token) {
+            Headers.set("authorization", `Bearer ${token}`);
+        }
         return Headers;
     },
 });
@@ -61,19 +64,16 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithReauth = async (args, api, extraOptions) =>{
     let result = await baseQuery(args, api, extraOptions);
 
-    if(result?.error?.status === 401){
+    if(result.error && result?.error?.status === 401){
         console.log("refresh token for sending request")
         
-        const refreshResult = await baseQuery("/api/refresh", api, extraOptions);
-        if (refreshResult?.data) {
-            const token = refreshResult.data.accessToken;
-            api.dispatch(setCredentials(token));
+        const refreshResult = await baseQuery("/user/refresh-token", api, extraOptions);
+        if (refreshResult.data) {
+            // const token = refreshResult.data.accessToken;
+            api.dispatch(setCredentials({...refreshResult.data}));
             result = await baseQuery(args, api, extraOptions);
         }else{
-            if (refreshResult?.error?.status === 401) {
-                refreshResult.error.data.message = "your  loggin expired"
-            }
-            return refreshResult
+        //    api.dispatch(logOut())
         }
 
     }
@@ -81,7 +81,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) =>{
 };
 
 
-const apiInstance = createApi({
+export const apiInstance = createApi({
     reducerPath: "apiInstance",
     baseQuery: baseQueryWithReauth,
     endpoints: () => ({}),

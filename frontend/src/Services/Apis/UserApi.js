@@ -1,4 +1,4 @@
-import apiInstance from "../../ConnectApi/Api.js";
+import apiInstance from "../ConnectApi/Api.js";
 
 export const UserApi = apiInstance.injectEndpoints({
     endpoints: (builder) => ({

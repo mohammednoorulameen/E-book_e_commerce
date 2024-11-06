@@ -1,224 +1,96 @@
-// import React from 'react'
-
-// import { FaStar, FaShoppingCart, FaHeart, FaChevronLeft, FaChevronRight, FaSearch, FaUser, FaBars } from 'react-icons/fa';
-// const Button = ({ children, onClick, className }) => (
-//     <button
-//       onClick={onClick}
-//       className={`px-4 py-2 rounded ${className}`}
-//       style={{ cursor: 'pointer', transition: 'background-color 0.3s' }}
-//     >
-//       {children}
-//     </button>
-//   );
-  
-//   // Custom Input Component
-//   const Input = ({ type, placeholder, className }) => (
-//     <input
-//       type={type}
-//       placeholder={placeholder}
-//       className={`border rounded px-3 py-2 ${className}`}
-//       style={{ width: '100%' }}
-//     />
-//   );
-// const Header = () => {
-//   return (
-//     <div>
-//    {/* Header */}
-//    <header style={{ borderBottom: '1px solid #e2e8f0', padding: '1rem 0' }}>
-//         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//           <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-//             <span style={{ color: '#3182ce' }}>E</span>-book
-//           </div>
-//           <div style={{ flex: 1, maxWidth: '36rem', margin: '0 1rem', position: 'relative', display: 'none' }}>
-//             <Input type="search" placeholder="Search for your favorite book..." />
-//             <FaSearch style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#718096' }} />
-//           </div>
-//           <div style={{ display: 'flex', gap: '1rem' }}>
-//             <Button className="bg-transparent hover:bg-gray-100"><FaUser /></Button>
-//             <Button className="bg-transparent hover:bg-gray-100"><FaShoppingCart /></Button>
-//             <Button className="bg-transparent hover:bg-gray-100"><FaHeart /></Button>
-//             <Button className="bg-transparent hover:bg-gray-100 md:hidden"><FaBars /></Button>
-//           </div>
-//         </div>
-//       </header>
-//     </div>
-//   )
-// }
-
-// export default Header
-
-import React, { useState } from 'react';
-import { FaSearch, FaUser, FaShoppingCart, FaHeart, FaEllipsisV, FaBook } from 'react-icons/fa';
+import React, { useState } from "react";
+import {
+  FaSearch,
+  FaUser,
+  FaShoppingCart,
+  FaHeart,
+  FaEllipsisV,
+  FaBook,
+} from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const NavLink = ({ children, active }) => (
   <a
     href="#"
-    style={{
-      color: 'white',
-      textDecoration: 'none',
-      padding: '15px 20px',
-      position: 'relative',
-      display: 'inline-block',
-      fontSize: '14px',
-      fontWeight: '500',
-      ...(active && {
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          height: '2px',
-          backgroundColor: '#007bff'
-        }
-      })
-    }}
+    className={`text-white text-sm font-medium px-5 py-3 ${
+      active ? "border-b-2 border-yellow-500" : ""
+    }`}
   >
     {children}
   </a>
 );
 
 export default function Header() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
+    console.log("Searching for:", searchQuery);
   };
 
   return (
     <header>
       {/* Top Bar */}
-      <div style={{
-        padding: '15px 20px',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #eee',
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '20px'
-        }}>
+      <div className="py-4 px-5 bg-white border-b border-gray-200 fixed top-0 w-full top- z-50">
+        {" "}
+        {/* Top bar sticky */}
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-5">
           {/* Logo */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '24px',
-            fontWeight: 'bold'
-          }}>
+          <div className="flex items-center gap-2 text-2xl font-bold text-black">
             <FaBook />
             <span>E-book</span>
           </div>
 
           {/* Search Bar */}
-          <form 
-            onSubmit={handleSearch}
-            style={{
-              flex: 1,
-              maxWidth: '600px',
-              position: 'relative'
-            }}
-          >
+          <form onSubmit={handleSearch} className="flex-1 max-w-2xl relative">
             <input
               type="text"
-              placeholder="Search for your boooks and more"
+              placeholder="Search for products, brands and more"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 40px 10px 15px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}
+              className="w-full py-2 pl-4 pr-12 border border-gray-300 rounded-full text-sm focus:outline-none"
             />
             <button
               type="submit"
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#666'
-              }}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-black text-white rounded-full p-2"
             >
               <FaSearch />
             </button>
           </form>
 
           {/* Right Icons */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px'
-          }}>
-            <a href="#" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              color: 'black',
-              textDecoration: 'none',
-              fontSize: '14px'
-            }}>
+          <div className="flex items-center gap-11 text-lg ml-auto ">
+            <Link
+              to="/login"
+              className="flex items-center gap-1 text-gray-800 group"
+            >
               <FaUser />
-              <span>Account</span>
-            </a>
-            <a href="#" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              color: 'black',
-              textDecoration: 'none',
-              fontSize: '14px'
-            }}>
+              <span className="text-black">Login</span>
+              <span className="absolute top-full mt-1 hidden group-hover:flex bg-black text-white rounded px-2 py-1 text-xs">
+                My Profile
+              </span>
+            </Link>
+            <a href="#" className="flex items-center gap-1 text-gray-800">
               <FaShoppingCart />
               <span>Cart</span>
             </a>
-            <a href="#" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              color: 'black',
-              textDecoration: 'none',
-              fontSize: '14px'
-            }}>
+            <a href="#" className="flex items-center gap-1 text-gray-800">
               <FaHeart />
-              <span>WhishList</span>
+              <span>Wishlist</span>
             </a>
-            <button style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#666',
-              padding: '5px'
-            }}>
+            <a href="#" className="flex items-center gap-1 text-gray-800">
               <FaEllipsisV />
-            </button>
+              <span></span>
+            </a>
           </div>
         </div>
       </div>
 
       {/* Navigation Menu */}
-      <nav style={{
-        backgroundColor: 'black',
-        padding: '0 20px'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '10px'
-        }}>
-          <NavLink>HOME</NavLink>
-          <NavLink active>SHOP</NavLink>
+      <nav className="bg-black px-5 fixed mt-14 w-full z-50">
+        <div className="max-w-screen-xl mx-auto flex justify-center gap-4">
+          <NavLink active>HOME</NavLink>
+          <NavLink>SHOP</NavLink>
           <NavLink>CATEGORIES</NavLink>
           <NavLink>AUTHORS</NavLink>
           <NavLink>CONTACT</NavLink>

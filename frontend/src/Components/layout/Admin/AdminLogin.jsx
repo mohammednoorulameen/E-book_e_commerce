@@ -1,10 +1,10 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
+import { setAdminCredentails } from "../../../Redux/Slice/AuthSlice.js";
+import { useAdminLoginMutation } from "../../../Services/Apis/AdminApi.js";
 import * as Yup from "yup";
-import { useLoginMutation } from "../../../../Services/Apis/UserApi";
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -16,8 +16,8 @@ const validationSchema = Yup.object().shape({
 });
 
 const Login = () => {
-  const [login, {  isError, isSuccess, error: authError }] =
-    useLoginMutation();
+  const [adminLogin, {  isError, isSuccess, error: authError }] =
+  useAdminLoginMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const formik = useFormik({
@@ -29,10 +29,13 @@ const Login = () => {
     validationSchema: validationSchema,
     onSubmit: async (userData) => {
       try {
-        const response = await login(userData).unwrap();
+        console.log(userData);
+        
+        const response = await adminLogin(userData).unwrap();
+        console.log("check response ",response)
         if (response && response.access_token) {
-          dispatch(setCredentials({accessToken : response.access_token}));
-          navigate("/");
+          dispatch(setAdminCredentails({accessToken : response.access_token}));
+          navigate("/admin/dashboard");
         }
       } catch (error) {
         console.log("error : ", error);
@@ -42,10 +45,10 @@ const Login = () => {
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
-        <hr className="w-1/2 mx-auto h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+        <hr className="mt-16 w-1/2 mx-auto h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <h2 className="mt-10 md:text-4.5xl text-4xl font-primary tracking-tighter leading-5 font-semibold text-center text-customColorTertiaryDark">
-            Login Your Account
+          <h2 className="mt-16 md:text-4.5xl text-4xl font-primary tracking-tighter leading-5 font-semibold text-center text-customColorTertiaryDark">
+           Admin Login  Account
           </h2>
         </div>
         
@@ -120,17 +123,6 @@ const Login = () => {
                     </a>
                   </p>
                 </div>
-                <div>
-                  <p className="  text-end text-sm text-gray-500">
-                    create account?{" "}
-                    <Link
-                      to="/register"
-                      className="font-semibold  text-black hover:underline"
-                    >
-                      Signup
-                    </Link>
-                  </p>
-                </div>
               </div>
             </div>
             <div className="flex justify-center">
@@ -138,24 +130,7 @@ const Login = () => {
                 type="submit"
                 className=" w-4/12 justify-center bg-white border border-black text-black px-3 py-1.5 text-sm font-semibold shadow-sm hover:bg-black hover:text-white"
               >
-                Login
-              </button>
-            </div>
-            <div className="text-slate-950 mt-10 items-center grid-cols-3 grid">
-              <hr className="text-slate-950" />
-              <p className="text-center">OR</p>
-              <hr className="text-slate-950" />
-            </div>
-            <div>
-              <button
-                className="bg-white border-2 py-2 w-full mb-24 flex hover:border-black duration-300"
-                type="button"
-              >
-                <div className="mx-auto flex">
-                  <p className=" font-tertiary  ms-5 font-semibold ">
-                    Continue With Google
-                  </p>
-                </div>
+                Login 
               </button>
             </div>
           </form>

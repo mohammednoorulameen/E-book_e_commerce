@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   useVerifyOtpMutation,
   useResendOtpMutation,
-} from "../../../../Services/Apis/UserApi/UserApi";
-import { setCredentails } from "../../../../Redux/Slice/AuthSlice";
+} from "../../../../Services/Apis/UserApi";
+import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
@@ -56,7 +56,7 @@ const Otp = () => {
       if (response && response.access_token) {
         setOtp("");
         setError("");
-        dispatch(setCredentails(response.access_token));
+        dispatch(setCredentials(response.access_token));
         navigate("/login");
       }
       console.log("OTP Submitted:", otp);

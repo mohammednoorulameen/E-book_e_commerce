@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRouter from './Routes/userRouter.js';
+import adminRouter from './Routes/AdminRouter.js';
 import connectDB from "./Config/dbConnection.js";
 
 
@@ -25,6 +26,7 @@ app.use(cookieParser())
 
 // api end points 
 app.use('/api/user',userRouter)
+app.use('/api/admin',adminRouter)
 
 
 
