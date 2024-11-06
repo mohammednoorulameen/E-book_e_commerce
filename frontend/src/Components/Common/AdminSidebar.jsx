@@ -55,7 +55,7 @@ const AdminSidebar = ({ sidebarOpen }) => {
               // button
               onClick={() => handlePath(item.path)}
               key={item.name}
-              className="hover:bg-gray-800 transition-colors duration-200 cursor-pointer"
+              className="hover:bg-zinc-100 transition-colors duration-200 cursor-pointer"
             >
               <ListItemIcon className="ml-5">
                 <IconComponent className={`w-5 h-5 ${isActive ? "text-gray-400" : "text-black"}`} />

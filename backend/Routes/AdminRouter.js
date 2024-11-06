@@ -1,10 +1,12 @@
 import express from 'express'
 const  adminRouter = express()
 
-import { AdminLogin, UserList,  } from "../Controllers/Admin/Admin.AuthController.js";
+import { AdminLogin, UserList, refreshingToken, BlockUser } from "../Controllers/Admin/Admin.AuthController.js";
 
 
 adminRouter.post('/adminlogin',AdminLogin)
-adminRouter.post('/adminuserslist',UserList)
+adminRouter.get('/refresh',refreshingToken)
+adminRouter.get('/adminuserslist',UserList)
+adminRouter.post('/adminblockuser',BlockUser)
 
 export default adminRouter
