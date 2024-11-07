@@ -1,17 +1,108 @@
-import React, { useState } from 'react';
-import { FaSearch, FaBell, FaFileExport, FaFileImport, FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import {
+  FaSearch,
+  FaBell,
+  FaFileExport,
+  FaFileImport,
+  FaPencilAlt,
+  FaTrashAlt,
+} from "react-icons/fa";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import {
+  useAddCategoryMutation,
+  useGetCategoryQuery,
+  useBlockCategoryMutation,
+  useEditCategoryMutation,
+} from "../../../Services/Apis/AdminApi";
+
+const validationSchema = Yup.object().shape({
+  category: Yup.string()
+    .max(20, "character limit")
+    .required("category is required"),
+  description: Yup.string()
+    .max(30, "character limit")
+    .required("description is required"),
+});
 
 const ProductManagement = () => {
-  const [activeTab, setActiveTab] = useState('products');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState("products");
+  const [categoryList, SetCategoryList] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
+  const {data,refetch } = useGetCategoryQuery();
+  const [blockCategory] =  useBlockCategoryMutation();
+  const [EditCategory] = useEditCategoryMutation()
 
-  const products = [
-    { id: 1, name: 'Laptop Pro', sku: 'LP-001', category: 'Electronics', price: '$1299.99', stock: 50, status: 'In Stock' },
-    { id: 2, name: 'Wireless Mouse', sku: 'WM-002', category: 'Accessories', price: '$29.99', stock: 100, status: 'In Stock' },
-    { id: 3, name: 'HD Monitor', sku: 'HM-003', category: 'Electronics', price: '$199.99', stock: 30, status: 'Low Stock' },
-    { id: 4, name: 'Mechanical Keyboard', sku: 'MK-004', category: 'Accessories', price: '$89.99', stock: 0, status: 'Out of Stock' },
-    { id: 5, name: 'Noise-Canceling Headphones', sku: 'NCH-005', category: 'Audio', price: '$249.99', stock: 75, status: 'In Stock' }
-  ];
+
+  /*
+  Edit category
+  */
+
+  const handleEditCategory = (id)=>{
+    const CategoryToEdit = categoryList.find((caregory)=> caregory._id === id)
+    setSelectedCategory(CategoryToEdit)
+    formik.setValues({
+      category: CategoryToEdit.category,
+      description: CategoryToEdit.description
+    })
+  }
+
+  /*
+  getting the category list
+   */
+
+  useEffect(() => {
+    if (data && data.categoryData) {
+      SetCategoryList([...data.categoryData]);
+    }
+  }, [data]);
+
+  /*
+  add and update category form 
+  */
+  const formik = useFormik({
+    initialValues: {
+      category: "",
+      description: "",
+    },
+
+    validationSchema: validationSchema,
+    // onSubmit: async (categoryData , resetForm ) => {
+    //   if (selectedCategory) {
+    //     const response = await EditCategory({...categoryData, id: selectedCategory._id})
+    //     if (data && response.data) {
+    //       setSelectedCategory(null)
+    //       resetForm();
+    //     }
+    //   }else {
+    //     const response = await addCategory(categoryData);
+    //     if (response?.data) {
+    //       resetForm();
+    //     }
+    //     console.log(response);
+    //   }
+      
+    // },
+
+onSubmit: async (categoryData, { resetForm }) => {
+  const response = selectedCategory ? await EditCategory({ ...categoryData, id: selectedCategory._id })
+    : await addCategory(categoryData);
+
+  if (response?.data) {
+    resetForm();
+    refetch(); // Refetch
+  }
+}
+  });
+
+  const  handlecategoryblock = async (id) =>{
+    try {
+      await blockCategory({id})
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,82 +111,138 @@ const ProductManagement = () => {
         {/* Tabs */}
         <div className="flex gap-4 border-b mb-6">
           <button
-            className={`pb-4 px-2 ${activeTab === 'products' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('products')}
+            className={`pb-4 px-2 ${
+              activeTab === "products"
+                ? "border-b-2 border-indigo-600 text-indigo-600"
+                : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab("products")}
           >
-             Categories
+            Categories
           </button>
-          <button
-            className={`pb-4 px-2 ${activeTab === 'categories' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('categories')}
+          {/* <button
+            className={`pb-4 px-2 ${
+              activeTab === "categories"
+                ? "border-b-2 border-indigo-600 text-indigo-600"
+                : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab("categories")}
           >
             Products
-          </button>
+          </button> */}
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Products</h2>
-          <div className="flex gap-3">
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+        {/* add caregory  */}
+        <form onSubmit={formik.handleSubmit}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Categories</h2>
+            {isSuccess && <h4 className="text-green-500">Category successfully addedd </h4> }
+            {isError && <h4 className="text-red-500">Category already exist</h4> }
+            <div className="flex gap-3">
+              <div className="flex flex-col">
+                {formik.touched.category && formik.errors.category && (
+                  <div className="text-red-500 text-sm mb-1">
+                    {formik.errors.category}
+                  </div>
+                )}
+                
+                <input
+                  id="category"
+                  name="category"
+                  value={formik.values.category}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  type="text"
+                  placeholder="Category"
+                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                {formik.touched.description && formik.errors.description && (
+                  <div className="text-red-500 text-sm mb-1">
+                    {formik.errors.description}
+                  </div>
+                )}
+                <input
+                  id="description"
+                  name="description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  type="text"
+                  placeholder="Description"
+                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                />
+              </div>
+
+             {selectedCategory ? (
+               <button
+               type="submit"
+               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+             >
+               Update category
+             </button>
+             ):(
+              <button
+              type="submit"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+            >
               Add new category
             </button>
-            <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <FaFileImport />
-              Import products
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <FaFileExport />
-              Export products (Excel)
-            </button>
+             )}
+            </div>
           </div>
-        </div>
+        </form>
 
         {/* Table */}
         <div className="bg-white rounded-lg shadow">
           <table className="w-full">
             <thead>
               <tr className="border-b">
+                <th className="text-left py-4 px-6">No</th>
                 <th className="text-left py-4 px-6">Category name</th>
-                <th className="text-left py-4 px-6">SKU</th>
-                <th className="text-left py-4 px-6">Category</th>
-                <th className="text-left py-4 px-6">Price</th>
-                <th className="text-left py-4 px-6">Stock</th>
+                <th className="text-left py-4 px-6">Description</th>
                 <th className="text-left py-4 px-6">Status</th>
                 <th className="text-left py-4 px-6">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
-                <tr key={product.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="py-4 px-6">{product.name}</td>
-                  <td className="py-4 px-6">{product.sku}</td>
-                  <td className="py-4 px-6">{product.category}</td>
-                  <td className="py-4 px-6">{product.price}</td>
-                  <td className="py-4 px-6">{product.stock}</td>
+              { categoryList.length > 0 ? (
+              categoryList.map((caregory,index) => (
+                <tr
+                  key={caregory._id}
+                  className="border-b last:border-b-0 hover:bg-gray-50"
+                >
+                  <td className="py-4 px-6">{index + 1}</td>
+                  <td className="py-4 px-6">{caregory.category}</td>
+                  <td className="py-4 px-6">{caregory.description}</td>
                   <td className="py-4 px-6">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      product.status === 'In Stock' 
-                        ? 'bg-green-100 text-green-800'
-                        : product.status === 'Low Stock'
-                        ? 'bg-yellow-100 text-yellow-800'
+                  <button onClick={()=>handlecategoryblock(caregory._id)} className={`px-3 py-1 rounded-full text-sm ${
+                      caregory.status 
+                        ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {product.status}
-                    </span>
+                      {caregory.status ? "Active":"block"}
+                    </button>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-9">
                     <div className="flex gap-2">
-                      <button className="text-gray-600 hover:text-indigo-600">
+                      <button onClick={()=> handleEditCategory(caregory._id)} className="text-gray-600 hover:text-indigo-600">
                         <FaPencilAlt className="w-4 h-4" />
                       </button>
-                      <button className="text-gray-600 hover:text-red-600">
+                      {/* <button className="text-gray-600 hover:text-red-600">
                         <FaTrashAlt className="w-4 h-4" />
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+            ):(
+              <tr>
+                {Error && <h4 className="text-red-400">category not found</h4> }
+              </tr>
+            )}
             </tbody>
           </table>
         </div>

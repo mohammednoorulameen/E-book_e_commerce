@@ -7,6 +7,10 @@ const UsersList = () => {
   const { data, isError, } = useGetUserListQuery();
   const [blockUser] = useBlockuserMutation()
   
+  /*
+  get users list
+  */
+
   useEffect(() => {
     if (data && data.usersList) {
       SetusersList([...data.usersList])
@@ -14,8 +18,9 @@ const UsersList = () => {
     
   }, [data])
   
-
-
+ /*
+ handle user block and unblock
+ */
 
   const handleuserblock = async (id)=>{
     try {
@@ -25,11 +30,6 @@ const UsersList = () => {
       console.log(error)
     }
   }
-
-  // const users = [
-  //   { id: 1, name: 'George Lindelof', mobile: '+4 315 23 62', email: 'carlsen@armand.no', status: 'Active', photo: '/placeholder.svg?height=40&width=40' },
-    
-  // ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -65,7 +65,7 @@ const UsersList = () => {
             </button>
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <FaFileExport />
-              Export members (Excel)
+              Export members 
             </button>
           </div>
         </div>
@@ -80,28 +80,29 @@ const UsersList = () => {
                 <th className="text-left py-4 px-6">Email</th>
                 <th className="text-left py-4 px-6">Joined on</th>
                 <th className="text-left py-4 px-6">Status</th>
-                <th className="text-left py-4 px-6">Operations</th>
+                {/* <th className="text-left py-4 px-6">Operations</th> */}
               </tr>
             </thead>
             <tbody>
               { usersList.length > 0 ?(
               usersList.map((user,index) => (
+                
                 <tr key={user._id} className="border-b last:border-b-0 hover:bg-gray-50">
                   <td className="py-4 px-6">{index + 1}</td>
                   <td className="py-4 px-6">{user.username}</td>
                   <td className="py-4 px-6">{user.phone}</td>
                   <td className="py-4 px-6">{user.email}</td>
-                  <td className="py-4 px-6">{user.createdAt}</td>
+                  <td className="py-4 px-6">{user.createdAt.split("T")[0]}</td>
                   <td className="py-4 px-6">
                     <button onClick={()=>handleuserblock(user._id)} className={`px-3 py-1 rounded-full text-sm ${
                       user.isActive 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.isActive ? "Active":"block"}
+                      {user.isActive ? "Active":"Inactive"}
                     </button>
                   </td>
-                  <td className="py-4 px-6">
+                  {/* <td className="py-4 px-6">
                     <div className="flex gap-2">
                       <button className="text-gray-600 hover:text-indigo-600">
                         <FaPencilAlt className="w-4 h-4" />
@@ -110,7 +111,7 @@ const UsersList = () => {
                         <FaTrashAlt className="w-4 h-4" />
                       </button>
                     </div>
-                  </td>
+                  </td> */}
                 </tr>
               ))
             ):(

@@ -40,8 +40,57 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
         method: "POST",
         body: { id },
       }),
-      invalidatesTags:['getUsersLists']
+      // invalidatesTags:['getUsersLists']
     }),
+
+    /*
+    add category
+    */
+
+  addCategory: builder.mutation({
+    query: (form)=>({
+      url:"/adminaddcategory",
+      method: "POST",
+      body: form
+    }),
+    // invalidatesTags:['getCategory']
+  }),
+
+   /*
+    get category
+    */
+
+    getCategory: builder.query({
+      query: ()=> "/admingetcategory",
+      providesTags: ['getCategory']
+    }),
+
+    /*
+    block and unblock category
+    */
+
+    blockCategory: builder.mutation({
+      query: ({id})=>({
+        url: "/adminblockcategory",
+        method: "POST",
+        body: {id}
+      }),
+    // invalidatesTags:['getCategory']
+    }),
+
+    /*
+    Edit category
+    */
+
+    EditCategory: builder.mutation({
+      query : (form)=>({
+        url: "/admineditcategory",
+        method: "PUT",
+        body: form
+      }),
+    // invalidatesTags:['getCategory']
+    })
+    
 
   }), 
 });
@@ -50,4 +99,9 @@ export const {
   useAdminLoginMutation,
   useGetUserListQuery,
   useBlockuserMutation,
+  useAddCategoryMutation,
+  useGetCategoryQuery,
+  useBlockCategoryMutation,
+  useEditCategoryMutation,
+
 } = AdminApi;
