@@ -31,8 +31,8 @@ const ProductManagement = () => {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
   const {data,refetch } = useGetCategoryQuery();
-  const [blockCategory] =  useBlockCategoryMutation();
-  const [EditCategory] = useEditCategoryMutation()
+  const [blockCategory, ] =  useBlockCategoryMutation();
+  const [EditCategory, {loading}] = useEditCategoryMutation()
 
 
   /*
@@ -68,23 +68,6 @@ const ProductManagement = () => {
     },
 
     validationSchema: validationSchema,
-    // onSubmit: async (categoryData , resetForm ) => {
-    //   if (selectedCategory) {
-    //     const response = await EditCategory({...categoryData, id: selectedCategory._id})
-    //     if (data && response.data) {
-    //       setSelectedCategory(null)
-    //       resetForm();
-    //     }
-    //   }else {
-    //     const response = await addCategory(categoryData);
-    //     if (response?.data) {
-    //       resetForm();
-    //     }
-    //     console.log(response);
-    //   }
-      
-    // },
-
 onSubmit: async (categoryData, { resetForm }) => {
   const response = selectedCategory ? await EditCategory({ ...categoryData, id: selectedCategory._id })
     : await addCategory(categoryData);
@@ -99,6 +82,7 @@ onSubmit: async (categoryData, { resetForm }) => {
   const  handlecategoryblock = async (id) =>{
     try {
       await blockCategory({id})
+      refetch()
     } catch (error) {
       console.log(error)
     }
@@ -175,8 +159,13 @@ onSubmit: async (categoryData, { resetForm }) => {
                   className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
                 />
               </div>
-
-             {selectedCategory ? (
+              <button
+               type="submit"
+               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+             >
+               {loading ? "processing..." : selectedCategory ? "Update category" : " Add new category" }
+               </button>
+             {/* {selectedCategory ? (
                <button
                type="submit"
                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
@@ -190,7 +179,7 @@ onSubmit: async (categoryData, { resetForm }) => {
             >
               Add new category
             </button>
-             )}
+             )} */}
             </div>
           </div>
         </form>

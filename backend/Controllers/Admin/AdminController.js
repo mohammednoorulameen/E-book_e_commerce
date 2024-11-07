@@ -205,9 +205,6 @@ const EditCategory = async (req, res) => {
     if (!updateCategory) {
       return res.status(404).json({ message: "Category not found" });
     }
-    // (updateCategory.category = category),
-    //   (updateCategory.description = description),
-    //   updateCategory.save();
     res.status(200).json({ message: "Category update successfully" });
   } catch (error) {
     console.log(error);
