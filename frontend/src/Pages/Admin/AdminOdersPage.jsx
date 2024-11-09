@@ -1,5 +1,5 @@
 import React from 'react'
-import AdminOders from '../../Components/layout/Admin/AdminOders'
+import AdminOders from '../../Components/layout/Admin/AdminOders/AdminOders'
 
 const AdminOdersPage = () => {
   return (

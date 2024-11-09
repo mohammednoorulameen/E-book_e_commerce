@@ -1,5 +1,6 @@
 import React from 'react'
-import AdminCategory from '../../Components/layout/Admin/AdminCategory'
+import AdminCategory from '../../Components/layout/Admin/AdminCategory/AdminCategory'
+
 
 const AdminCategoryPage = () => {
   return (

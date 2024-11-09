@@ -1,13 +1,11 @@
 import React from 'react'
-import AdminDashboard from '../../Components/layout/Admin/AdminDashboard'
-// import AdminSidebar from '../../Components/Common/AdminSidebar'
-// import AdminNavbar from '../../Components/Common/AdminNavbar'
+import AdminDashboard from '../../Components/layout/Admin/AdminDashboard/AdminDashboard'
+
 
 const AdminDashboardPage = () => {
   return (
     <div >
-      {/* <AdminNavbar/> */}
-      {/* <AdminSidebar/> */}
+      
         <AdminDashboard/>
     </div>
   )

@@ -1,5 +1,5 @@
 import React from 'react'
-import AdminLogin from '../../Components/layout/Admin/AdminLogin'
+import AdminLogin from '../../Components/layout/Admin/AdminLogin/AdminLogin'
 
 const LoginPage = () => {
   return (

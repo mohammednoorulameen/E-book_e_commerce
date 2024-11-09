@@ -14,14 +14,16 @@ import {
   useGetCategoryQuery,
   useBlockCategoryMutation,
   useEditCategoryMutation,
-} from "../../../Services/Apis/AdminApi";
+} from "../../../../Services/Apis/AdminApi";
 
 const validationSchema = Yup.object().shape({
   category: Yup.string()
-    .max(20, "character limit")
+    .max(20, "character limit") 
+    // .matches(/^\S*$/, "Category name cannot contain spaces")
     .required("category is required"),
   description: Yup.string()
     .max(30, "character limit")
+    // .matches(/^\S*$/, "description name cannot contain spaces")
     .required("description is required"),
 });
 
@@ -29,6 +31,7 @@ const ProductManagement = () => {
   const [activeTab, setActiveTab] = useState("products");
   const [categoryList, SetCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null)
+    // const [isEditing, setIsEditing] = useState(false); 
   const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
   const {data,refetch } = useGetCategoryQuery();
   const [blockCategory, ] =  useBlockCategoryMutation();
@@ -42,6 +45,7 @@ const ProductManagement = () => {
   const handleEditCategory = (id)=>{
     const CategoryToEdit = categoryList.find((caregory)=> caregory._id === id)
     setSelectedCategory(CategoryToEdit)
+    // setIsEditing(true);
     formik.setValues({
       category: CategoryToEdit.category,
       description: CategoryToEdit.description
@@ -71,10 +75,12 @@ const ProductManagement = () => {
 onSubmit: async (categoryData, { resetForm }) => {
   const response = selectedCategory ? await EditCategory({ ...categoryData, id: selectedCategory._id })
     : await addCategory(categoryData);
-
   if (response?.data) {
     resetForm();
     refetch(); // Refetch
+    setSelectedCategory(null)
+
+
   }
 }
   });
@@ -163,23 +169,8 @@ onSubmit: async (categoryData, { resetForm }) => {
                type="submit"
                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
              >
-               {loading ? "processing..." : selectedCategory ? "Update category" : " Add new category" }
+               { selectedCategory ? "Update category" : " Add new category" }
                </button>
-             {/* {selectedCategory ? (
-               <button
-               type="submit"
-               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-             >
-               Update category
-             </button>
-             ):(
-              <button
-              type="submit"
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-            >
-              Add new category
-            </button>
-             )} */}
             </div>
           </div>
         </form>
@@ -229,7 +220,7 @@ onSubmit: async (categoryData, { resetForm }) => {
               ))
             ):(
               <tr>
-                {Error && <h4 className="text-red-400">category not found</h4> }
+                <td className="text-red-400">{Error && "category not found"}</td> 
               </tr>
             )}
             </tbody>

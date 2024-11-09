@@ -40,7 +40,7 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
         method: "POST",
         body: { id },
       }),
-      // invalidatesTags:['getUsersLists']
+      invalidatesTags:['getUsersLists']
     }),
 
     /*
@@ -53,7 +53,7 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
       method: "POST",
       body: form
     }),
-    // invalidatesTags:['getCategory']
+    invalidatesTags:['getCategory']
   }),
 
    /*
@@ -75,12 +75,12 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
         method: "POST",
         body: {id}
       }),
-    // invalidatesTags:['getCategory']
+    invalidatesTags:['getCategory']
     }),
 
-    /*
-    Edit category
-    */
+    /**
+     *  edit category
+     */
 
     EditCategory: builder.mutation({
       query : (form)=>({
@@ -88,9 +88,69 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
         method: "PUT",
         body: form
       }),
-    // invalidatesTags:['getCategory']
-    })
+    invalidatesTags:['getCategory']
+    }),
     
+    /**
+     * add product
+     */
+
+    addProduct: builder.mutation({
+      query: (form)=>({
+        url:"/adminadd-product",
+        method: "POST",
+        body: form
+      }),
+      invalidatesTags:['getProducts']
+    }),
+
+    /**
+     * get products
+     * product pagination
+     */
+
+    getProducts: builder.query({
+      query:({page,limit})=>`/adminlist-Products?page${page}$limit${limit}`,
+      providesTags:['getProducts']
+    }),
+
+    /**
+     * admin block and unblock product
+     */
+
+    blockProduct: builder.mutation({
+      query: ({ id }) => ({
+        url: "/admin-block-product",
+        method: "POST",
+        body: { id },
+      }),
+      invalidatesTags:['getProducts']
+    }),
+
+     /**
+     * get edit product
+     */
+
+     getEitProduct: builder.query({
+      query: ({product_id}) => `get-edit-product?product_id=${product_id}`,
+      providesTags:['getEditProduct']
+    }),
+
+    /**
+     * admin edit products  
+     */
+
+    EditProduct: builder.mutation({
+      query : (form)=>({
+        url: "/admin-edit-product",
+        method: "PUT",
+        body: form
+      }),
+      invalidatesTags:['getProducts','getEditProduct']
+    }),
+
+   
+
 
   }), 
 });
@@ -103,5 +163,10 @@ export const {
   useGetCategoryQuery,
   useBlockCategoryMutation,
   useEditCategoryMutation,
+  useAddProductMutation,
+  useGetProductsQuery,
+  useBlockProductMutation,
+  useEditProductMutation,
+  useGetEitProductQuery,
 
 } = AdminApi;

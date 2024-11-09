@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {  FaFileExport, FaFileImport, FaPencilAlt, FaCopy, FaTrashAlt } from 'react-icons/fa';
-import {  useGetUserListQuery, useBlockuserMutation} from "../../../Services/Apis/AdminApi";
+import {  useGetUserListQuery, useBlockuserMutation} from "../../../../Services/Apis/AdminApi";
 const UsersList = () => {
   const [activeTab, setActiveTab] = useState('members');
   const [usersList, SetusersList] = useState([])
-  const { data, isError, } = useGetUserListQuery();
+  const { data, isError, refetch } = useGetUserListQuery();
   const [blockUser] = useBlockuserMutation()
   
   /*
@@ -25,7 +25,7 @@ const UsersList = () => {
   const handleuserblock = async (id)=>{
     try {
      await blockUser({id})
-     
+     refetch()
     } catch (error) {
       console.log(error)
     }
@@ -59,14 +59,14 @@ const UsersList = () => {
             <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
               Add new member
             </button>
-            <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            {/* <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <FaFileImport />
               Import members
             </button>
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <FaFileExport />
               Export members 
-            </button>
+            </button> */}
           </div>
         </div>
         {/* Table */}
@@ -99,7 +99,7 @@ const UsersList = () => {
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.isActive ? "Active":"Inactive"}
+                      {user.isActive ? "Active":"Block"}
                     </button>
                   </td>
                   {/* <td className="py-4 px-6">

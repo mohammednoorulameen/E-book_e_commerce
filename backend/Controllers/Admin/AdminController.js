@@ -87,9 +87,11 @@ const UserList = async (req, res) => {
   }
 };
 
-/*
-admin block user
-*/
+
+
+/**
+ * admin block user
+ */
 
 const BlockUser = async (req, res) => {
   const { id } = req.body;
@@ -105,7 +107,7 @@ const BlockUser = async (req, res) => {
 
       res.status(200).json({ message: "success" });
     } else {
-      res.status(200).json({ message: "Invalid or missing user ID" });
+      res.status(400).json({ message: "Invalid or missing user ID" });
     }
   } catch (error) {
     console.log(error);
@@ -181,8 +183,9 @@ const BlockCategory = async (req, res) => {
 };
 
 /*
-admin Edit category
-*/
+ * admin Edit category
+ */
+
 const EditCategory = async (req, res) => {
   const { category, description, id } = req.body;
    console.log(category, description, id)

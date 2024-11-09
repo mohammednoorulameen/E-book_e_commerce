@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaUserCircle, FaCog, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
+import { FaSearch, FaUserCircle, FaCog, FaSignOutAlt, FaBars, FaTimes, FaBook } from "react-icons/fa";
 
 const AdminNavbar = ({ sidebarOpen, toggleSidebar }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,12 +12,17 @@ const AdminNavbar = ({ sidebarOpen, toggleSidebar }) => {
 
   return (
     <header className="bg-white border-b ">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4 ">
         <div className="flex items-center gap-6">
           <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-900">
             {sidebarOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
-          <h1 className="text-xl font-bold">AdminPanel</h1>
+          <h3
+        className="flex items-center justify-center mt-"
+        style={{ fontSize: "20px", fontWeight: "bold" }}
+      >
+    <FaBook className="ml-4 text-black" /> <span>E-book (Admin)</span>
+</h3>
           <div className="relative">
             <input
               type="text"

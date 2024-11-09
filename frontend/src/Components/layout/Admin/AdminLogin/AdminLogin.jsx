@@ -2,8 +2,8 @@ import React from "react";
 import {  useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
-import { setAdminCredentails } from "../../../Redux/Slice/AuthSlice.js";
-import { useAdminLoginMutation } from "../../../Services/Apis/AdminApi.js";
+import { setAdminCredentails } from "../../../../Redux/Slice/AuthSlice.js";
+import { useAdminLoginMutation } from "../../../../Services/Apis/AdminApi.js";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({

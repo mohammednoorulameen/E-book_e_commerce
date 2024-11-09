@@ -19,11 +19,11 @@ const sidebarItems = [
   { name: "Products", icon: FaList, path: "/admin/products" },
   { name: "Users", icon: FaUsers, path: "/admin/users" },
   { name: "Categories", icon: FaCalendar, path: "/admin/category" },
-  { name: "Orders", icon: FaShoppingCart, path: "/" },
-  { name: "Coupons", icon: FaPercent, path: "/" },
-  { name: "Banners", icon: FaDesktop, path: "/" },
-  { name: "Payments", icon: FaCreditCard, path: "/" },
-  { name: "Offers", icon: FaChartLine, path: "/" },
+  { name: "Orders", icon: FaShoppingCart, path: "" },
+  { name: "Coupons", icon: FaPercent, path: "" },
+  { name: "Banners", icon: FaDesktop, path: "" },
+  { name: "Payments", icon: FaCreditCard, path: "" },
+  { name: "Offers", icon: FaChartLine, path: "" },
 ];
 
 const AdminSidebar = ({ sidebarOpen }) => {
@@ -40,12 +40,9 @@ const AdminSidebar = ({ sidebarOpen }) => {
         sidebarOpen ? "w-60" : "w-0"
       } bg-white min-h-screen shadow-md transition-all duration-300 ease-in-out  overflow-hidden`}
     >
+      <h3 className="flex items-center justify-center mt-4"> </h3>
       <h3
-        className="flex items-center justify-center mt-5"
-        style={{ fontSize: "24px", fontWeight: "bold" }}
-      >
-        <FaBook className="ml-4 text-black" /> <span>E-book</span>
-      </h3>
+        className="flex items-center justify-center mt-11"> </h3>
       <List>
         {sidebarItems.map((item) => {
           const isActive = location.pathname === item.path;
