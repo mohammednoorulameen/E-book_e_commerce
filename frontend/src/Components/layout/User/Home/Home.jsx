@@ -1,12 +1,11 @@
 import React from 'react';
-import { FaStar, FaShoppingCart, FaHeart, FaChevronLeft, FaChevronRight, FaSearch, FaUser, FaBars } from 'react-icons/fa';
+import { FaStar, FaShoppingCart, FaHeart } from 'react-icons/fa';
 
 // Custom Button Component
 const Button = ({ children, onClick, className }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 rounded ${className}`}
-    style={{ cursor: 'pointer', transition: 'background-color 0.3s' }}
+    className={`px-4 py-2 rounded transition-colors duration-300 ${className}`}
   >
     {children}
   </button>
@@ -17,26 +16,25 @@ const Input = ({ type, placeholder, className }) => (
   <input
     type={type}
     placeholder={placeholder}
-    className={`border rounded px-3 py-2 ${className}`}
-    style={{ width: '100%' }}
+    className={`border rounded px-3 py-2 w-full ${className}`}
   />
 );
 
 const BookCard = ({ title, author, price }) => (
-  <div style={{ position: 'relative', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-    <div style={{ aspectRatio: '3/4', backgroundColor: '#f7fafc', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-      <img src="/placeholder.svg" alt="Book cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+  <div className="relative p-4 border border-gray-300 rounded-lg">
+    <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-4">
+      <img src="/placeholder.svg" alt="Book cover" className="w-full h-full object-cover" />
     </div>
-    <h3 style={{ fontWeight: 'bold' }}>{title}</h3>
-    <p style={{ color: '#718096', fontSize: '0.875rem' }}>{author}</p>
-    <div style={{ display: 'flex', gap: '0.25rem', margin: '0.5rem 0' }}>
+    <h3 className="font-bold">{title}</h3>
+    <p className="text-gray-600 text-sm">{author}</p>
+    <div className="flex gap-1 my-2">
       {[1, 2, 3, 4, 5].map((star) => (
-        <FaStar key={star} style={{ color: '#f6ad55' }} />
+        <FaStar key={star} className="text-orange-400" />
       ))}
     </div>
-    <p style={{ fontWeight: 'bold' }}>{price}</p>
-    <p style={{ fontSize: '0.75rem', color: '#718096' }}>Free Delivery</p>
-    <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <p className="font-bold">{price}</p>
+    <p className="text-xs text-gray-600">Free Delivery</p>
+    <div className="absolute top-2 right-2 flex flex-col gap-2">
       <Button className="bg-gray-200 hover:bg-gray-300">
         <FaShoppingCart />
       </Button>
@@ -49,16 +47,14 @@ const BookCard = ({ title, author, price }) => (
 
 export default function BookstoreHomepage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-     
-
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section style={{ position: 'relative', height: '400px', overflow: 'hidden' }}>
-        <img src="/placeholder.svg" alt="Books banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>TOP DEAL TODAY!</h1>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>BOOKS</h2>
+      <section className="relative h-96 overflow-hidden">
+        <img src="https://t4.ftcdn.net/jpg/06/88/66/31/360_F_688663136_CYDZXf10utvUG7QScsByISc5AaEDf68F.jpg" alt="Books banner" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center text-white">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">TOP DEAL TODAY!</h1>
+            <h2 className="text-2xl mb-6">BOOKS</h2>
             <Button className="bg-white text-black hover:bg-gray-100">
               SHOP NOW
             </Button>
@@ -67,12 +63,12 @@ export default function BookstoreHomepage() {
       </section>
 
       {/* Super Saver Section */}
-      <section style={{ padding: '3rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ borderBottom: '2px solid #3182ce', paddingBottom: '0.5rem' }}>Super Saver</span>
+      <section className="py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-8 border-b-2 border-blue-600 inline-block pb-2">
+            Super Saver
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((item) => (
               <BookCard key={item} title="The White Tiger" author="Aravind Adiga" price="INR 999/-" />
             ))}
@@ -81,12 +77,12 @@ export default function BookstoreHomepage() {
       </section>
 
       {/* New Books Section */}
-      <section style={{ padding: '3rem 0', backgroundColor: '#f7fafc' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>
+      <section className="py-12 bg-gray-100">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-8">
             NEW BOOKS TOP DEAL
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((item) => (
               <BookCard key={item} title="The White Tiger" author="Aravind Adiga" price="INR 999/-" />
             ))}
@@ -95,18 +91,18 @@ export default function BookstoreHomepage() {
       </section>
 
       {/* Featured Authors */}
-      <section style={{ padding: '3rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>
+      <section className="py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-8">
             FEATURED AUTHOR
           </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem' }}>
+          <div className="flex flex-wrap justify-center gap-8">
             {[1, 2, 3, 4, 5, 6].map((author) => (
-              <div key={author} style={{ textAlign: 'center' }}>
-                <div style={{ width: '6rem', height: '6rem', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#e2e8f0', marginBottom: '0.5rem' }}>
-                  <img src="/placeholder.svg" alt="Author" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div key={author} className="text-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-2">
+                  <img src="/placeholder.svg" alt="Author" className="w-full h-full object-cover" />
                 </div>
-                <p style={{ fontSize: '0.875rem', fontWeight: '500' }}>Author Name</p>
+                <p className="text-sm font-medium">Author Name</p>
               </div>
             ))}
           </div>

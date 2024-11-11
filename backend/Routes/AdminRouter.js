@@ -21,7 +21,6 @@ adminRouter.get("/refresh", refreshingToken);
 adminRouter.get("/adminuserslist", UserList);
 adminRouter.get("/admingetcategory", getCategory);
 adminRouter.get("/adminlist-Products", ListProduct)
-adminRouter.get("/adminlist-Products", ListProduct)
 adminRouter.get("/get-edit-product", GetEditProduct)
 
 /*

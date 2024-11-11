@@ -7,6 +7,8 @@ import { Outlet } from "react-router-dom";
 import OtpPage from "../Pages/User/OtpPage";
 import PublicRoute from "../Utils/Protector/PublicRoute";
 import Footer from "../Components/Common/Footer";
+import ShopPage from "../Pages/User/ShopPage";
+import ProductDetailsPage from "../Pages/User/ProductDetailsPage";
 
 
 
@@ -17,7 +19,10 @@ const UserRouter=[
       <>
       <Header/>
 
-      <Outlet/>
+      <div style={{paddingTop :"100px"}}>
+      <Outlet />
+      </div>
+      
       <Footer/>
       </>
     ),
@@ -50,6 +55,24 @@ const UserRouter=[
         element:
         <PublicRoute>
          <LoginPage/>
+        </PublicRoute>
+
+      },
+
+      {
+        path : "/shop",
+        element:
+        <PublicRoute>
+         <ShopPage/>
+        </PublicRoute>
+
+      },
+
+      {
+        path : "/productdetails/:product_id",
+        element:
+        <PublicRoute>
+         <ProductDetailsPage/>
         </PublicRoute>
 
       },

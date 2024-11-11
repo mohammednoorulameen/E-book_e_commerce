@@ -48,8 +48,26 @@ export const UserApi = apiInstance.injectEndpoints({
         })
     }),
 
-    /*
-    */
+    /**
+     * get products
+     * product pagination
+     */
+
+    getProducts: builder.query({
+        query:({page,limit})=>`/user/list-Products?page${page}$limit${limit}`,
+        providesTags:['getProducts']
+      }),
+
+      /**
+     * get products detailes
+     * 
+     */
+
+    getProductsDetails: builder.query({
+        query:(product_id)=>`/user/Products-details?product_id=${product_id}`,
+        providesTags:['getProductsDetails']
+      }),
+
 
 
 
@@ -62,5 +80,7 @@ useRegisterMutation,
 useVerifyOtpMutation,
 useResendOtpMutation,
 useLoginMutation,
+useGetProductsQuery,
+useGetProductsDetailsQuery
 
 } = UserApi

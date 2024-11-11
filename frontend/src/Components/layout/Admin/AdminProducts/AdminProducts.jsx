@@ -21,6 +21,7 @@ const ProductManagement = () => {
     page: currentPage,
     limit: 10,
   });
+  
   const handleAddProduct = () => {
     navigate("/admin/addproduct");
   };

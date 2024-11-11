@@ -31,7 +31,7 @@ const validationSchema = Yup.object().shape({
     .required("Category is required"),
   description: Yup.string().required("Description is required"),
   publisher: Yup.string()
-    .matches(/^\S*$/, "Publisher cannot contain spaces")
+    .matches(/\S*$/, "Publisher cannot contain spaces")
     .required("Publisher is required"),
   author: Yup.string().required("Author is required"),
   language: Yup.string()

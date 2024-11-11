@@ -4,6 +4,9 @@ import { Eye, EyeOff } from "lucide-react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { useRegisterMutation } from "../../../../Services/Apis/UserApi.js";
+import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+// import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../../../Services/firebase/firebaseConfig.js";
 
 const validationSchema = Yup.object().shape({
   username: Yup.string()
@@ -56,6 +59,32 @@ const Signup = () => {
     }
 
   },[isSuccess,navigate])
+
+  /**
+   * HandleGoogleAurhentication
+   */
+  const HandleGoogleAurhentication = async (e)=>{
+    const provider = await new GoogleAuthProvider();
+    return signInWithRedirect(auth,provider)
+
+  }
+
+  useEffect(() => {
+    const HandleGoogleAurhentication = async () => {
+      try {
+        const provider = await new GoogleAuthProvider();
+        const result =signInWithRedirect(auth,provider)
+        if (result) {
+          console.log("User Info:", result.user);
+          navigate('/'); // Redirect to dashboard or preferred page
+        }
+      } catch (error) {
+        console.error("Error retrieving redirect result:", error.message);
+      }
+    };
+
+    HandleGoogleAurhentication();
+  }, [navigate]);
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
@@ -227,19 +256,19 @@ const Signup = () => {
               <p className="text-center">OR</p>
               <hr className="text-slate-950" />
             </div>
+              </form>
             <div>
               <button
                 className="bg-white border-2 py-2 w-full mb-24 flex hover:border-black duration-300"
                 type="button"
               >
                 <div className="mx-auto flex">
-                  <p className=" font-tertiary  ms-5 font-semibold ">
+                  <button type="button" onClick={HandleGoogleAurhentication} className=" font-tertiary  ms-5 font-semibold ">
                     Continue With Google
-                  </p>
+                  </button>
                 </div>
               </button>
             </div>
-          </form>
         </div>
       </div>
     </div>

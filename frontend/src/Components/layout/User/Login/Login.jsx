@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
 import * as Yup from "yup";
 import { useLoginMutation } from "../../../../Services/Apis/UserApi";
+import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+// import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../../../Services/firebase/firebaseConfig.js";
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -39,6 +42,32 @@ const Login = () => {
       }
     },
   });
+   /**
+   * HandleGoogleAurhentication
+   */
+   const HandleGoogleAurhentication = async (e)=>{
+    const provider = await new GoogleAuthProvider();
+    return signInWithRedirect(auth,provider)
+
+  }
+
+  // useEffect(() => {
+  //   const HandleGoogleAurhentication = async () => {
+  //     try {
+  //       const provider = await new GoogleAuthProvider();
+  //       const result =signInWithRedirect(auth,provider)
+  //       if (result) {
+  //         console.log("User Info:", result.user);
+  //         navigate('/'); // Redirect to dashboard or preferred page
+  //       }
+  //     } catch (error) {
+  //       console.error("Error retrieving redirect result:", error.message);
+  //     }
+  //   };
+
+  //   HandleGoogleAurhentication();
+  // }, [navigate]);
+
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
@@ -152,9 +181,10 @@ const Login = () => {
                 type="button"
               >
                 <div className="mx-auto flex">
-                  <p className=" font-tertiary  ms-5 font-semibold ">
+                  <button  onClick={HandleGoogleAurhentication}
+                type="button" className=" font-tertiary  ms-5 font-semibold ">
                     Continue With Google
-                  </p>
+                  </button>
                 </div>
               </button>
             </div>

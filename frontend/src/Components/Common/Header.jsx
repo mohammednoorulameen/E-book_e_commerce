@@ -9,17 +9,6 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const NavLink = ({ children, active }) => (
-  <a
-    href="#"
-    className={`text-white text-sm font-medium px-5 py-3 ${
-      active ? "border-b-2 border-yellow-500" : ""
-    }`}
-  >
-    {children}
-  </a>
-);
-
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -31,7 +20,7 @@ export default function Header() {
   return (
     <header>
       {/* Top Bar */}
-      <div className="py-4 px-5 bg-white border-b border-gray-200 fixed top-0 w-full top- z-50">
+      <div className="py-4 px-5 bg-white border-b border-gray-200 fixed top-0 w-full top- z-50 b-11 ">
         {" "}
         {/* Top bar sticky */}
         <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-5">
@@ -89,14 +78,22 @@ export default function Header() {
       {/* Navigation Menu */}
       <nav className="bg-black px-5 fixed mt-14 w-full z-50">
         <div className="max-w-screen-xl mx-auto flex justify-center gap-4">
-          <NavLink active>HOME</NavLink>
-          <NavLink>SHOP</NavLink>
-          <NavLink>CATEGORIES</NavLink>
-          <NavLink>AUTHORS</NavLink>
-          <NavLink>CONTACT</NavLink>
-          <NavLink>ABOUT US</NavLink>
+          <Link className="border-b-2 border-yellow-500 text-white text-sm font-medium px-5 py-3" >HOME</Link>
+          <Link to={'/shop'} className="text-white text-sm font-medium px-5 py-3" >SHOP</Link>
+          <Link className="text-white text-sm font-medium px-5 py-3">CATEGORIES</Link>
+          <Link className="text-white text-sm font-medium px-5 py-3">AUTHORS</Link>
+          <Link className="text-white text-sm font-medium px-5 py-3">CONTACT</Link>
+          <Link className="text-white text-sm font-medium px-5 py-3">ABOUT US</Link>
         </div>
       </nav>
     </header>
   );
 }
+{/* <a
+href="#"
+className={`text-white text-sm font-medium px-5 py-3 ${
+  active ? "border-b-2 border-yellow-500" : ""
+}`}
+>
+{children}
+</a> */}
