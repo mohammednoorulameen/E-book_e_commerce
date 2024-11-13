@@ -23,7 +23,30 @@ const review=[
     {user_id:'672b1849e3ba520c9f1389d8',userName:"Hari",star:2,comment:" nice product"},
     {user_id:'6728618a4970cb6d054bd4f3',userName:"John",star:4,comment:"very nice product"},
   ]
-
+  if(productName.trim()===''){
+    return res.status(401).json({messageToProductname:"*This field is required"})
+  }
+  if(price===''){
+    return res.status(401).json({messageToStock:"*This field is required"})
+  }
+  if(stock===''){
+    return res.status(401).json({messageToCarat:"*This field is required"})
+  }
+  if(author===''){
+    return res.status(401).json({messageToPrice:"*This field is required"})
+  }
+  if(description.trim()===''){
+    return res.status(401).json({messageToDescription:"*This field is required"})
+  }
+  if(category.trim()===''){
+    return res.status(401).json({messageToCategory:"*This field is required"})
+  }
+  if(publisher.trim()===''){
+    return res.status(401).json({messageToOrigin:"*This field is required"})
+  }
+  if(language.trim()===''){
+    return res.status(401).json({messageToOrigin:"*This field is required"})
+  }
 try {
     const product = await  Products.create({
         productName,
@@ -48,24 +71,28 @@ try {
  * pagination
  */
 
-const ListProduct =async (req,res)=>{
-  
+const ListProduct = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-  const limit = parseInt(req.query.page) || 10
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
 
-  const skip = (page - 1) * limit // calculating number of document
-  const products = await Products.find().skip(skip).limit(limit)
-  const totalProducts = await Products.countDocuments();
+    const skip = (page - 1) * limit; 
+    const products = await Products.find().skip(skip).limit(limit); 
+    const totalProducts = await Products.countDocuments(); 
+    const totalPage = Math.ceil(totalProducts / limit);
+    const currentPage = page;
 
-  const totalPage = Math.ceil(totalProducts/limit)
-  const currentPage = page;
-  res.status(200).json({ message:"products listing succussfully",totalPage,totalProducts,currentPage,products})
+    res.status(200).json({
+      message: "Products listed successfully",
+      totalPage,
+      totalProducts,
+      currentPage,
+      products,
+    });
   } catch (error) {
-  res.status(500).json({ message:"error retrieve products"})
-    
+    res.status(500).json({ message: "Error retrieving products", error: error.message });
   }
-}
+};
 
 /**
  * admin block and unblock products
@@ -133,18 +160,6 @@ const EditProduct =async (req,res)=>{
   }
   try {
     const product = await Products.findByIdAndUpdate(_id,req.body);
-  //   product.productName = productName;
-  //   product.price = price;
-  //   product.stock = stock;
-  //   product.author = author;
-  //   product.description = description;
-  //   product.category = category;
-  //   product.publisher = publisher;
-  //   product.review = review;
-  //   product.images = images;
-  //   product.language = language;
-  //  await product.save()
-
     console.log(product)
     res.status(200).json({ message: "update successfully" });
   } catch (error) {

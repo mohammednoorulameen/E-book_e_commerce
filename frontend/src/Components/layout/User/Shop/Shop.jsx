@@ -23,6 +23,12 @@ const Shop = () => {
     return <p>Failed to load products. Please try again later.</p>;
   }
 
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    refetch();
+  };
+
   const { products, totalPage } = data;
 console.log(products)
 
@@ -114,29 +120,58 @@ const handleProduct = (id) =>{
 
         
         <div className="mt-8 flex items-center justify-center space-x-2">
-          <button
+          {/* <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
             className="rounded bg-[#374151] px-3 py-1 text-white disabled:opacity-50"
           >
-            {/* <ChevronLeft size={20} />  */}
+            <ChevronLeft size={20} /> 
           </button>
-        
-          <span>{`Page ${currentPage} of ${data?.totalPages || 1}`}</span>
+         */}
+          {/* <span>{`Page ${currentPage} of ${data?.totalPages || 1}`}</span>
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, data?.totalPages))}
             disabled={currentPage === data?.totalPages}
             className="rounded bg-[#374151] px-3 py-1 text-white disabled:opacity-50"
           >
-            {/* <ChevronRight size={20} /> */}
-          </button>
+            <ChevronRight size={20} />
+          </button> */}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPage}
+          onPageChange={handlePageChange}
+        />
         </div>
       </div>
+      
     </main>
   </div>
 
   )
 }
 
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  return (
+    <div className="flex justify-end mt-4">
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={`px-3 py-1 mx-1 border rounded ${
+            page === currentPage
+              ? "bg-indigo-600 text-white"
+              : "hover:bg-gray-100"
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export default Shop;

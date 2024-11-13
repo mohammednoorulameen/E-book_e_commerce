@@ -9,7 +9,7 @@ const ListProduct =async (req,res)=>{
   
     try {
       const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.page) || 10
+    const limit = parseInt(req.query.limit) || 9
   
     const skip = (page - 1) * limit // calculating number of document
     const products = await Products.find({status: true}).skip(skip).limit(limit)

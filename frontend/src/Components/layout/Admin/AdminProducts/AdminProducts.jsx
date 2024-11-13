@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useGetProductsQuery,useBlockProductMutation } from "../../../../Services/Apis/AdminApi";
 
-const ProductManagement = () => {
+const AdminProducts = () => {
   const navigate = useNavigate();
   const [blockProduct]= useBlockProductMutation()
   const [activeTab, setActiveTab] = useState("products");
@@ -21,6 +21,7 @@ const ProductManagement = () => {
     page: currentPage,
     limit: 10,
   });
+
   
   const handleAddProduct = () => {
     navigate("/admin/addproduct");
@@ -28,6 +29,7 @@ const ProductManagement = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    refetch();
   };
 
   if (isLoading) {
@@ -39,6 +41,7 @@ const ProductManagement = () => {
   }
 
   const { products, totalPage } = data;
+console.log(totalPage);
 
   /**
    * admin block & unblock product
@@ -172,6 +175,7 @@ const ProductManagement = () => {
           totalPages={totalPage}
           onPageChange={handlePageChange}
         />
+        
       </div>
     </div>
   );
@@ -199,4 +203,5 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
-export default ProductManagement;
+export default AdminProducts;
+ 

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useGetProductsDetailsQuery } from "../../../../Services/Apis/UserApi";
 import { useParams } from "react-router-dom";
+// import InnerImageZoom from 'react-inner-image-zoom';
+// import 'react-inner-image-zoom/lib/InnerImageZoom/styles.min.css';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 import {
 FaArrowLeft,
 FaArrowRight
@@ -48,11 +52,14 @@ console.log(review)
       <div className="grid grid-cols-3 gap-6">
         
         <div className="col-span-1">
+        <Zoom>
+
           <img
             src={product.images?.[currenImageIndex] || "path/to/default-image.jpg"} 
             alt={product.productName || "Product Image"}
             className="w-full h-auto mb-4 border"
-          />
+            />
+            </Zoom> 
 
           <div className="flex space-x-2">
             {product.images?.map((thumb, index) => (

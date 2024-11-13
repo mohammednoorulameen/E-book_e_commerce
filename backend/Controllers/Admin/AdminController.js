@@ -196,11 +196,16 @@ const EditCategory = async (req, res) => {
     return res.status(401).json({ message: "description cannot be empty" });
   }
   try {
+    // const { ObjectId } = mongoose.Types;
     const ExistCategory = await Category.findOne({
-      $and: [{ category }, { _id: { $ne:  id  } }],
+      $and: [{ category }, { _id: { $ne: id } }],
     });
+
+// const ExistCategory = await Category.findOne({
+//   $and: [{ category }, { _id: { $ne: ObjectId(id) } }],
+// });
     if (ExistCategory) {
-      res.status(401).json({ message: "Category already exist" });
+     return res.status(401).json({ message: "Category already exist" });
     }
 
     const updateCategory = await Category.findByIdAndUpdate(id,{ category,description },{new:true});

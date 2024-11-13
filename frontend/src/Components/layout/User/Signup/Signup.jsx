@@ -69,22 +69,22 @@ const Signup = () => {
 
   }
 
-  useEffect(() => {
-    const HandleGoogleAurhentication = async () => {
-      try {
-        const provider = await new GoogleAuthProvider();
-        const result =signInWithRedirect(auth,provider)
-        if (result) {
-          console.log("User Info:", result.user);
-          navigate('/'); // Redirect to dashboard or preferred page
-        }
-      } catch (error) {
-        console.error("Error retrieving redirect result:", error.message);
-      }
-    };
+  // useEffect(() => {
+  //   const HandleGoogleAurhentication = async () => {
+  //     try {
+  //       const provider = await new GoogleAuthProvider();
+  //       const result =signInWithRedirect(auth,provider)
+  //       if (result) {
+  //         console.log("User Info:", result.user);
+  //         navigate('/'); // Redirect to dashboard or preferred page
+  //       }
+  //     } catch (error) {
+  //       console.error("Error retrieving redirect result:", error.message);
+  //     }
+  //   };
 
-    HandleGoogleAurhentication();
-  }, [navigate]);
+  //   HandleGoogleAurhentication();
+  // }, [navigate]);
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">

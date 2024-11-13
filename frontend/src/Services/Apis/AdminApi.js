@@ -110,7 +110,7 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
      */
 
     getProducts: builder.query({
-      query:({page,limit})=>`/adminlist-Products?page${page}$limit${limit}`,
+      query:({page,limit})=>`/adminlist-Products?page=${page}$limit=${limit}`,
       providesTags:['getProducts']
     }),
 

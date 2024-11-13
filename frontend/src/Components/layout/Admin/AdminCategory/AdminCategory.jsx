@@ -33,10 +33,18 @@ const ProductManagement = () => {
   const [selectedCategory, setSelectedCategory] = useState(null)
     // const [isEditing, setIsEditing] = useState(false); 
   const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
-  const {data,refetch } = useGetCategoryQuery();
+  const {data,refetch } = useGetCategoryQuery({
+    page:currentPage,
+    limit:10
+  });
   const [blockCategory, ] =  useBlockCategoryMutation();
   const [EditCategory, {loading}] = useEditCategoryMutation()
 
+  
+  const handlePageChange = () => {
+    setCurrentPage(page)
+
+  }
 
   /*
   Edit category
@@ -226,6 +234,9 @@ onSubmit: async (categoryData, { resetForm }) => {
             </tbody>
           </table>
         </div>
+
+        <pagination 
+        />
       </div>
     </div>
   );

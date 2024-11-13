@@ -54,7 +54,7 @@ export const UserApi = apiInstance.injectEndpoints({
      */
 
     getProducts: builder.query({
-        query:({page,limit})=>`/user/list-Products?page${page}$limit${limit}`,
+        query:({page,limit})=>`/user/list-Products?page=${page}$limit=${limit}`,
         providesTags:['getProducts']
       }),
 
