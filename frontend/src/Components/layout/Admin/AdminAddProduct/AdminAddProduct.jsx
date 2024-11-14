@@ -12,9 +12,9 @@ import { getCroppedImg } from "../../../../Utils/ImageCrop/ImageCrop";
 import { imageUploadCloudinery } from "../../../../Services/Cloudinary/Cloudinary";
 import { useNavigate } from "react-router-dom";
 
-const validationSchema = Yup.object().shape({
+export const validationSchema = Yup.object().shape({
   productName: Yup.string()
-    .matches(/\S*$/,"Product name cannot contain spaces")
+    .matches(/\S*$/, "Product name cannot contain spaces")
     .required("Product name is required"),
   price: Yup.number()
     .typeError("Price must be a number")
@@ -48,7 +48,7 @@ const validationSchema = Yup.object().shape({
 const AddProduct = () => {
   const navigate = useNavigate();
   const [addProduct, { isError }] = useAddProductMutation();
-  const { data } = useGetCategoryQuery();
+  const { data } = useGetCategoryQuery({ page: 1 });
   const [categoryList, SetCategoryList] = useState([]);
   const [images, setImages] = useState([]);
   const [crop, setCrop] = useState(null);
@@ -72,7 +72,7 @@ const AddProduct = () => {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       console.log(values);
-      
+
       try {
         // const formData = new FormData();
         // formData.append("productName", values.productName);
@@ -120,29 +120,44 @@ const AddProduct = () => {
   /**
    * image upload
    */
+  // const handleImageUpload = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     // formik.setFieldValue('image', [...formik.v alues.image, file]);
+  //     setCurrentImage(URL.createObjectURL(file));
+  //     setCrop(
+  //       centerCrop(
+  //         makeAspectCrop(
+  //           { width: 80, aspect: 4 / 3 },
+  //           imageRef.current.width / imageRef.current.height
+  //         )
+  //       )
+  //     );
+  //   }
+  // };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // formik.setFieldValue('image', [...formik.v alues.image, file]);
-      setCurrentImage(URL.createObjectURL(file));
-      setCrop(
-        centerCrop(
-          makeAspectCrop(
-            { width: 80, aspect: 4 / 3 },
-            imageRef.current.width / imageRef.current.height
+      const img = new Image();
+      img.onload = () => {
+        const width = img.width;
+        const height = img.height;
+
+        setCurrentImage(URL.createObjectURL(file));
+        setCrop(
+          centerCrop(
+            makeAspectCrop({ width: 80, aspect: 4 / 3 }, width / height)
           )
-        )
-      );
+        );
+      };
+      img.src = URL.createObjectURL(file);
     }
   };
-
-
 
   /**
    * handle cropped images add cloudinary set the url of images
    */
-
-
 
   const handleCropComplete = async () => {
     if (completedCrop && imageRef.current) {
@@ -317,7 +332,7 @@ const AddProduct = () => {
         {/* Image Upload Section */}
         <div>
           <label className="block text-sm font-medium mb-2">Image</label>
-         
+
           <input
             type="file"
             name="images"
@@ -327,7 +342,7 @@ const AddProduct = () => {
             onBlur={formik.handleBlur}
             className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
-           <button
+          <button
             type="button"
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 text-center text-sm"
             onClick={() => document.getElementById("images").click()}
@@ -366,8 +381,15 @@ const AddProduct = () => {
                   }}
                 />
               </ReactCrop>
-
-              <button onClick={handleCropComplete}>Add</button>
+              <div className="text-center ">
+                <button
+                type="button"
+                  className="w-1/4 text-center mt-5 bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={handleCropComplete}
+                >
+                  Add
+                </button>
+              </div>
             </div>
           )}
           <div className="grid grid-cols-3 gap-4 mt-4">

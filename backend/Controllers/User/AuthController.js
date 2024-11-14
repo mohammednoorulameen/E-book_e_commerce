@@ -65,7 +65,7 @@ const Register = async (req, res) => {
       message: "Successfully Registration, OTP Send Successfully",
       userId: userData._id,
     });
-
+  
     await sendVerificationMail(
       {
         email: user.email,
@@ -192,6 +192,7 @@ const Login = async (req, res) => {
       secure: false,
       ExpireAt: maxage,
     });
+
     await res
       .status(200)
       .json({ message: " User Login Successfully ", access_token });

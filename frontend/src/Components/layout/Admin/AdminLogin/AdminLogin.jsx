@@ -2,7 +2,7 @@ import React from "react";
 import {  useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
-import { setAdminCredentails } from "../../../../Redux/Slice/AuthSlice.js";
+// import { setAdminCredentails } from "../../../../Redux/Slice/AuthSlice.js";
 import { useAdminLoginMutation } from "../../../../Services/Apis/AdminApi.js";
 import * as Yup from "yup";
 
@@ -31,11 +31,13 @@ const Login = () => {
       try {
         console.log(userData);
         
-        const response = await adminLogin(userData).unwrap();
+        const response = await adminLogin(userData);
         console.log("check response ",response)
-        if (response && response.access_token) {
-          dispatch(setAdminCredentails({accessToken : response.access_token}));
-          navigate("/admin/dashboard");
+         if (response.data) {
+          // console.log('check', check)
+        localStorage.setItem('adminToken',response.data.access_token)
+        navigate("/admin/dashboard")
+        window.location.reload();
         }
       } catch (error) {
         console.log("error : ", error);

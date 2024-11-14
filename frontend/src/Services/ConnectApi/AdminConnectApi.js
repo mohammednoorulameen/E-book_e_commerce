@@ -1,12 +1,12 @@
 import { createApi, fetchBaseQuery  } from "@reduxjs/toolkit/query/react";
-import { setAdminCredentails } from "../../Redux/Slice/AuthSlice.js";
+// import { setAdminCredentails } from "../../Redux/Slice/AuthSlice.js";
 
 
 const baseQuery = fetchBaseQuery({
     baseUrl: "http://localhost:4040/api/admin",
     credentials: "include",
     prepareHeaders: (Headers, {getState}) =>{
-        const adminToken =  getState().auth.adminToken;
+        const adminToken =  localStorage.getItem('adminToken')
         if (adminToken) {
             Headers.set("authorization", `Bearer ${adminToken}`);
         }
@@ -14,7 +14,7 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-const baseQueryWithReauth = async (args, api, extraOptions) =>{
+export const baseQueryWithReauth = async (args, api, extraOptions) =>{
     let result = await baseQuery(args, api, extraOptions);
 
     if(result.error && result?.error?.status === 401){
@@ -23,7 +23,9 @@ const baseQueryWithReauth = async (args, api, extraOptions) =>{
         const refreshResult = await baseQuery("/admin/refresh-token", api, extraOptions);
         if (refreshResult.data) {
             // const token = refreshResult.data.accessToken;
-            api.dispatch(setAdminCredentails({...refreshResult.data}));
+            // api.dispatch(setAdminCredentails({...refreshResult.data}));
+            localStorage.setItem('adminToken',refreshResult.data.accessToken)
+
             result = await baseQuery(args, api, extraOptions);
         }else{
         //    api.dispatch(logOut())
@@ -34,10 +36,10 @@ const baseQueryWithReauth = async (args, api, extraOptions) =>{
 };
 
 
-export const AdminApiInstance = createApi({
-    reducerPath: "AdminApiInstance",
-    baseQuery: baseQueryWithReauth,
-    endpoints: () => ({}),
-})
+// export const AdminApiInstance = createApi({
+//     reducerPath: "AdminApiInstance",
+//     baseQuery: baseQueryWithReauth,
+//     endpoints: () => ({}),
+// })
 
-export default AdminApiInstance
+// export default AdminApiInstance

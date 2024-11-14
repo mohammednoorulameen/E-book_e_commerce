@@ -7,17 +7,26 @@ import AdminUsersPage from '../Pages/Admin/AdminUsersPage'
 import AdminCategoryPage from '../Pages/Admin/AdminCategoryPage'
 import AdminAddProductPage from '../Pages/Admin/AdminAddProductPage'
 import AdminEditProductPage from '../Pages/Admin/AdminEditProductPage'
+import AdminAuth from '../Utils/Protector/AdminAuth'
+import AdminPrivate from '../Utils/Protector/AdminPrivate'
 
 
 const adminRoutes=[
   {
-    path:'/admin/adminlogin',
-    element:<AdminLoginPage/>
+    path:'/admin/login',
+    element:
+    <AdminAuth>
+      <AdminLoginPage/>
+    </AdminAuth>
   },
 
   {
     path:'/admin',
-    element: < AdminLayout/>,
+    element:
+    <AdminPrivate>
+      < AdminLayout/>,
+    </AdminPrivate>, 
+
     children:[
       {
         path: 'dashboard',

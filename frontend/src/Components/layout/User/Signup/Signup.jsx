@@ -17,7 +17,7 @@ const validationSchema = Yup.object().shape({
     .email("Invalid email format")
     .required("Email is required"),
   phone: Yup.string()
-    .required("Phonr number is required")
+    .required("Phone number is required")
     .matches(/^\d{10,11}$/, "Enter a valid phone number"),
 
   password: Yup.string()
@@ -28,7 +28,7 @@ const validationSchema = Yup.object().shape({
     .min(4, "Password must be at least 4 characters"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Password must be match ")
-    .required("Cofirm Password is required"),
+    .required("Confirm Password is required"),
 });
 
 const Signup = () => {

@@ -21,4 +21,4 @@ const GenerateOtp = async (user) => {
   };
 
   export { GenerateOtp }
-  
+   

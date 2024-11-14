@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
+// import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
 import * as Yup from "yup";
 import { useLoginMutation } from "../../../../Services/Apis/UserApi";
 import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
@@ -31,11 +31,14 @@ const Login = () => {
 
     validationSchema: validationSchema,
     onSubmit: async (userData) => {
+      
       try {
-        const response = await login(userData).unwrap();
-        if (response && response.access_token) {
-          dispatch(setCredentials({accessToken : response.access_token}));
+        const response = await login(userData);
+        console.log('response.data', response)
+        if ( response.data) {
+          localStorage.setItem('userToken',response.data.access_token);
           navigate("/");
+          window.location.reload();
         }
       } catch (error) {
         console.log("error : ", error);

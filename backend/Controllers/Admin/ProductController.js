@@ -177,7 +177,7 @@ const GetEditProduct = async (req,res)=>{
 
   try {
    const product = await Products.findById(product_id)
-   res.status(200).json({ message: "edit data successfully",product });
+   res.status(200).json({ message: "get edit data successfully",product });
   } catch (error) {
     console.log(error)
   }

@@ -31,20 +31,24 @@ const ProductManagement = () => {
   const [activeTab, setActiveTab] = useState("products");
   const [categoryList, SetCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null)
-    // const [isEditing, setIsEditing] = useState(false); 
+  const [ currentPage, setCurrentPage ] = useState(1)
   const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
-  const {data,refetch } = useGetCategoryQuery({
+  const {data,refetch, isLoading, iserror } = useGetCategoryQuery({
     page:currentPage,
     limit:10
   });
   const [blockCategory, ] =  useBlockCategoryMutation();
-  const [EditCategory, {loading}] = useEditCategoryMutation()
+  const [EditCategory, ] = useEditCategoryMutation()
 
   
-  const handlePageChange = () => {
+  /**
+   *  handle change page and take totalPage
+   */
+  const handlePageChange = (page) => {
     setCurrentPage(page)
-
+    
   }
+  const totalPage = data?.totalPage 
 
   /*
   Edit category
@@ -202,7 +206,7 @@ onSubmit: async (categoryData, { resetForm }) => {
                   key={caregory._id}
                   className="border-b last:border-b-0 hover:bg-gray-50"
                 >
-                  <td className="py-4 px-6">{index + 1}</td>
+                  <td className="py-4 px-6">{(currentPage - 1) * 10 + index + 1}</td>
                   <td className="py-4 px-6">{caregory.category}</td>
                   <td className="py-4 px-6">{caregory.description}</td>
                   <td className="py-4 px-6">
@@ -235,11 +239,38 @@ onSubmit: async (categoryData, { resetForm }) => {
           </table>
         </div>
 
-        <pagination 
+        <Pagination
+        currentPage = {currentPage}
+        totalPage = {totalPage} 
+        onPageChannge = {handlePageChange}
         />
       </div>
     </div>
   );
 };
+
+
+const Pagination = ({currentPage, totalPage, onPageChannge}) =>{
+  const pages = Array.from({ length : totalPage}, (_,i)=> i + 1);
+
+  return (
+    <div className="flex justify-end mt-4">
+      {pages.map((page)=>(
+        <button 
+        key={page}
+        onClick={()=> onPageChannge(page)}
+        className={`px-3 py-1 mx-1 border rounded ${
+          page === currentPage
+            ? "bg-indigo-600 text-white"
+            : "hover:bg-gray-100"
+        }`}
+        >
+          {page}
+        </button>
+      ))}
+
+    </div>
+  )
+}
 
 export default ProductManagement;

@@ -1,6 +1,9 @@
-import AdminApiInstance from "../ConnectApi/AdminConnectApi.js";
+import { baseQueryWithReauth } from "../ConnectApi/AdminConnectApi.js";
+import { createApi } from "@reduxjs/toolkit/query/react";
 
-export const AdminApi = AdminApiInstance.injectEndpoints({
+export const adminApi = createApi({
+  reducerPath: 'adminApi',
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     /*
     admin login api
@@ -27,7 +30,7 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
     get user list
     */
     getUserList: builder.query({
-      query: () => "/adminuserslist",
+      query: ({page,limit}) => `/adminuserslist?page=${page}$limit=${limit}`,
       providesTags: ['getUsersLists'],
     }),
 
@@ -61,7 +64,7 @@ export const AdminApi = AdminApiInstance.injectEndpoints({
     */
 
     getCategory: builder.query({
-      query: ()=> "/admingetcategory",
+      query: ({page,limit})=> `/admingetcategory?page=${page}$limit=${limit}`,
       providesTags: ['getCategory']
     }),
 
@@ -169,4 +172,4 @@ export const {
   useEditProductMutation,
   useGetEitProductQuery,
 
-} = AdminApi;
+} = adminApi;

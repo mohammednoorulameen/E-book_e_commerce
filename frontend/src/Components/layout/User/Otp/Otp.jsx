@@ -3,7 +3,7 @@ import {
   useVerifyOtpMutation,
   useResendOtpMutation,
 } from "../../../../Services/Apis/UserApi";
-import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
+// import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
@@ -53,11 +53,18 @@ const Otp = () => {
     try {
       const response = await verifyOtp({ userId, otp }).unwrap();
       console.log(response);
-      if (response && response.access_token) {
-        setOtp("");
-        setError("");
-        dispatch(setCredentials(response.access_token));
-        navigate("/login");
+      // if (response && response.access_token) {
+      //   setOtp("");
+      //   setError("");
+      //   // dispatch(setCredentials(response.access_token));
+      //   localStorage.setItem()
+      //   navigate("/login");
+      // }
+      if('data' in response){
+        localStorage.setItem('userToken',response.data.access_token)
+        localStorage.removeItem('email');
+        navigate('/')
+        window.location.reload(); 
       }
       console.log("OTP Submitted:", otp);
     } catch (error) {

@@ -5,10 +5,10 @@ import HomePage from "../Pages/User/HomePage";
 import Header from "../Components/Common/Header";
 import { Outlet } from "react-router-dom";
 import OtpPage from "../Pages/User/OtpPage";
-import PublicRoute from "../Utils/Protector/PublicRoute";
 import Footer from "../Components/Common/Footer";
 import ShopPage from "../Pages/User/ShopPage";
 import ProductDetailsPage from "../Pages/User/ProductDetailsPage";
+import UserAuthenticated from "../Utils/Protector/UserAuthenticated";
 
 
 
@@ -36,44 +36,44 @@ const UserRouter=[
       {
         path:'register',
         element: 
-        <PublicRoute>
+        <UserAuthenticated>
            <SignupPage/>
-           </PublicRoute>
+           </UserAuthenticated>
       },
 
       {
         path: "/verifyotp/:userId",
         element:
-        <PublicRoute>
+        <UserAuthenticated>
          <OtpPage/>
-        </PublicRoute>
+        </UserAuthenticated>
 
       },
 
       {
         path : "/login",
         element:
-        <PublicRoute>
+        <UserAuthenticated>
          <LoginPage/>
-        </PublicRoute>
+        // </UserAuthenticated>
 
       },
 
       {
         path : "/shop",
         element:
-        <PublicRoute>
+        // <PublicRoute>
          <ShopPage/>
-        </PublicRoute>
+        // </PublicRoute>
 
       },
 
       {
         path : "/productdetails/:product_id",
         element:
-        <PublicRoute>
+        // <PublicRoute>
          <ProductDetailsPage/>
-        </PublicRoute>
+        // </PublicRoute>
 
       },
       
@@ -84,33 +84,3 @@ const UserRouter=[
 
 
 export default UserRouter
-
-// const UserRouter = () => {
-//   return (
-//     <div>
-//       <Routes>
-//         <Route path="/" element={<HomePage />} />
-//         <Route
-//           path="/register"
-//           element={
-//             <PublicRoute>
-//               <SignupPage />
-//             </PublicRoute>
-//           }
-//         />
-//         <Route path="/verifyotp/:userId" element={<OtpPage />} />
-//         <Route
-//           path="/login"
-//           element={
-//             <PublicRoute>
-//               <LoginPage />
-//             </PublicRoute>
-//           }
-//         />
-        
-//       </Routes>
-//     </div>
-//   );
-// };
-
-// export default UserRouter;

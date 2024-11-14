@@ -57,6 +57,7 @@ const AdminLogin = async (req, res) => {
   if (!adminData.isActive) {
     return res.status(403).json({ message: "Sorry, you are blocked" });
   }
+  console.log('adminData', adminData)
   if (adminData.role == "admin") {
     const access_token = AccessToken({ id: adminData._id, isAdmin: true }); // generate access token
     const refresh_token = RefreshToken({ id: adminData._id, isAdmin: true }); // generatew refresh token
@@ -79,15 +80,29 @@ get users list
 
 const UserList = async (req, res) => {
   try {
-    const usersList = await User.find({ isAdmin: false });
-    res.status(200).json({ message: "get user success", usersList });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const usersList = await User.find({ isAdmin: false })
+      .skip(skip)
+      .limit(limit);
+    const totalUsers = await User.countDocuments();
+    const totalPage = Math.ceil(totalUsers / limit);
+    const currentPage = page;
+    res
+      .status(200)
+      .json({
+        message: "get user success",
+        usersList,
+        totalUsers,
+        totalPage,
+        currentPage,
+      });
   } catch (error) {
     console.log(error, "userlist");
     res.status(500).json({ message: "Failed to get users" });
   }
 };
-
-
 
 /**
  * admin block user
@@ -149,10 +164,21 @@ const AddCategory = async (req, res) => {
 
 const getCategory = async (req, res) => {
   try {
-    const categoryData = await Category.find();
-    res
-      .status(200)
-      .json({ message: "category getting successful", categoryData });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const categoryData = await Category.find().skip(skip).limit(limit);
+    const totalCategory = await Category.countDocuments();
+    const totalPage = Math.ceil(totalCategory / limit);
+    const currentPage = page;
+
+    res.status(200).json({
+      message: "category getting successful",
+      categoryData,
+      totalPage,
+      currentPage,
+      totalCategory,
+    });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -188,7 +214,7 @@ const BlockCategory = async (req, res) => {
 
 const EditCategory = async (req, res) => {
   const { category, description, id } = req.body;
-   console.log(category, description, id)
+  console.log(category, description, id);
   if (!category || category.trim() === "") {
     return res.status(401).json({ message: "category cannot be empty" });
   }
@@ -201,15 +227,19 @@ const EditCategory = async (req, res) => {
       $and: [{ category }, { _id: { $ne: id } }],
     });
 
-// const ExistCategory = await Category.findOne({
-//   $and: [{ category }, { _id: { $ne: ObjectId(id) } }],
-// });
+    // const ExistCategory = await Category.findOne({
+    //   $and: [{ category }, { _id: { $ne: ObjectId(id) } }],
+    // });
     if (ExistCategory) {
-     return res.status(401).json({ message: "Category already exist" });
+      return res.status(401).json({ message: "Category already exist" });
     }
 
-    const updateCategory = await Category.findByIdAndUpdate(id,{ category,description },{new:true});
-    console.log(updateCategory)
+    const updateCategory = await Category.findByIdAndUpdate(
+      id,
+      { category, description },
+      { new: true }
+    );
+    console.log(updateCategory);
     if (!updateCategory) {
       return res.status(404).json({ message: "Category not found" });
     }

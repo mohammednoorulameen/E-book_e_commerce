@@ -6,7 +6,8 @@ const transporter = nodemailer.createTransport({
     auth : {
         user : process.env.EMAIL_USER,
         pass : process.env.PASS_EMAIL,
-    }
+    },
+ 
 })
 
 const sendVerificationMail = async (user, otp) =>{

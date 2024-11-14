@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import {
   useEditProductMutation,
   useGetCategoryQuery,
-  useGetEitProductQuery
+  useGetEitProductQuery,
 } from "../../../../Services/Apis/AdminApi";
 import { Upload, Trash2, Crop } from "lucide-react";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
@@ -15,7 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const validationSchema = Yup.object().shape({
   productName: Yup.string()
-    .matches(/\S*$/,"Product name cannot contain spaces")
+    .matches(/\S*$/, "Product name cannot contain spaces")
     .required("Product name is required"),
   price: Yup.number()
     .typeError("Price must be a number")
@@ -49,10 +49,12 @@ const validationSchema = Yup.object().shape({
 const AdminEditProduct = () => {
   const navigate = useNavigate();
   const { product_id } = useParams();
-  const { data: product,refetch} = useGetEitProductQuery({product_id:product_id})
-  console.log(product)
+  const { data: product, refetch } = useGetEitProductQuery({
+    product_id: product_id,
+  });
+  console.log(product);
   const [EditProduct, { isError }] = useEditProductMutation();
-  const { data } = useGetCategoryQuery();
+  const { data } = useGetCategoryQuery({ page: 1 });
   const [categoryList, SetCategoryList] = useState([]);
   const [images, setImages] = useState([]);
   const [crop, setCrop] = useState(null);
@@ -60,31 +62,31 @@ const AdminEditProduct = () => {
   const [completedCrop, setCompletedCrop] = useState(null);
   const [imagerr, setImagerr] = useState(false);
   const imageRef = useRef(null);
+  const [imagepreview, setimagepreview] = useState([]);
 
   const formik = useFormik({
     initialValues: {
-        productName: product?.product?.productName || "",
-        price: product?.product?.price || "",
-        stock: product?.product?.stock || "",
-        category: product?.product?.category || "",
-        description: product?.product?.description || "",
-        publisher: product?.product?.publisher || "",
-        author: product?.product?.author || "",
-        language: product?.product?.language || "",
-        images: product?.product?.images || [],
-        _id: product?.product?._id || "",
+      productName: product?.product?.productName || "",
+      price: product?.product?.price || "",
+      stock: product?.product?.stock || "",
+      category: product?.product?.category || "",
+      description: product?.product?.description || "",
+      publisher: product?.product?.publisher || "",
+      author: product?.product?.author || "",
+      language: product?.product?.language || "",
+      images: product?.product?.images || [],
+      _id: product?.product?._id || "",
     },
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
       console.log(values);
-      
+
       try {
         const response = await EditProduct(values);
         if (response.data) {
           navigate("/admin/products");
-          refetch()
-
+          refetch();
         }
         console.log("Product added successfully:", response);
       } catch (error) {
@@ -92,6 +94,13 @@ const AdminEditProduct = () => {
       }
     },
   });
+
+  // if (product?.product?.images) {
+
+  //   setimagepreview(product?.product?.images)
+  // }
+
+  // console.log(imagepreview)
 
   /**
    * active categories of list
@@ -125,15 +134,25 @@ const AdminEditProduct = () => {
     }
   };
 
-
-
   /**
    * handle cropped images add cloudinary set the url of images
    */
 
-
-
-  const handleCropComplete = async () => {
+  const handleEditCropComplete = async () => {
+    // if (completedCrop && imageRef.current) {
+    //   const croppedImageURL = await getCroppedImg(
+    //     imageRef.current,
+    //     completedCrop
+    //   );
+    //   const response = await fetch(croppedImageURL);
+    //   const blob = await response.blob();
+    //   const file = new File([blob], "cropped.jpeg", { type: "image/jpeg" });
+    //   const imgUrl = await imageUploadCloudinery(file);
+    //   setImages((prevImages) => [...prevImages, imgUrl]);
+    //   formik.setFieldValue("images", [...formik.values.images, imgUrl]);
+    //   // setCurrentImage(null);
+    //   // setCrop(null);
+    // }
     if (completedCrop && imageRef.current) {
       const croppedImageURL = await getCroppedImg(
         imageRef.current,
@@ -306,32 +325,26 @@ const AdminEditProduct = () => {
         {/* Image Upload Section */}
         <div>
           <label className="block text-sm font-medium mb-2">Image</label>
-         
+
           <input
             type="file"
             name="images"
             id="images"
             multiple
+            values={formik.values.images}
             onChange={handleImageUpload}
             onBlur={formik.handleBlur}
             className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
-           <button
+          <button
             type="button"
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 text-center text-sm"
+            className="px-4 mt-5 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 text-center text-sm"
             onClick={() => document.getElementById("images").click()}
           >
             upload image
           </button>
           {currentImage && (
             <div className="flex flex-col mt-4 ">
-              {/* <ReactCrop
-                crop={crop}
-                onChange={(newCrop) => setCrop(newCrop)}
-                onComplete={setCompletedCrop}
-              >
-                <img ref={imageRef} src={currentImage} alt="preview" />
-              </ReactCrop> */}
               <ReactCrop
                 crop={crop}
                 onChange={(newCrop) => setCrop(newCrop)}
@@ -356,9 +369,38 @@ const AdminEditProduct = () => {
                 />
               </ReactCrop>
 
-              <button onClick={handleCropComplete}>Add</button>
+             <div className="text-center">
+             <button
+             type="button"
+                className="w-1/4 bg-black text-white mt-5 rounded-lg py-3  hover:bg-gray-800 transition-colors"
+                onClick={handleEditCropComplete}
+              >
+                Add
+              </button>
+             </div>
             </div>
+            
           )}
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            {product?.product?.images.map((image, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={image}
+                  alt={`Product ${index + 1}`}
+                  className="w-full h-32 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleImageDelete(index)}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* ------------------------------------------------- */}
           <div className="grid grid-cols-3 gap-4 mt-4">
             {images.map((image, index) => (
               <div key={index} className="relative">
@@ -377,6 +419,8 @@ const AdminEditProduct = () => {
               </div>
             ))}
           </div>
+          {/* ------------------------------------------------- */}
+
           {formik.touched.image && formik.errors.image && (
             <div className="text-red-600">{formik.errors.image}</div>
           )}
@@ -388,6 +432,10 @@ const AdminEditProduct = () => {
         >
           Update Product
         </button>
+        {/* {images.map((curr,i)=>{
+<div>{curr}</div>
+            })}
+            <div>asdf</div> */}
       </form>
     </div>
   );

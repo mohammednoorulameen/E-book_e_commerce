@@ -1,6 +1,9 @@
-import apiInstance from "../ConnectApi/Api.js";
+import { baseQueryWithReauth } from "../ConnectApi/Api.js";
+import { createApi } from "@reduxjs/toolkit/query/react";
 
-export const UserApi = apiInstance.injectEndpoints({
+export const userApi = createApi({
+    reducerPath: 'userApi',
+    baseQuery: baseQueryWithReauth,
     endpoints: (builder) => ({
     /*
     user registration api
@@ -83,4 +86,4 @@ useLoginMutation,
 useGetProductsQuery,
 useGetProductsDetailsQuery
 
-} = UserApi
+} = userApi

@@ -130,7 +130,7 @@ console.log(totalPage);
                   key={product._id}
                   className="border-b last:border-b-0 hover:bg-gray-50"
                 >
-                  <td className="py-4 px-6">{index + 1}</td>
+                  <td className="py-4 px-6">{(currentPage - 1) * 10 + index + 1}</td>
                   <td className="py-4 px-6">
                     <img
                       className="w-10 h-10 object-cover rounded"
