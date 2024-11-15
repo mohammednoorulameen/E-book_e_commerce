@@ -13,6 +13,41 @@ const maxage = 7 * 24 * 60 * 60 * 1000;
 dotenv.config();
 // const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 
+
+
+/*
+user refreshing token 
+*/
+
+const RefreshingToken = async (req, res) => {
+  const refreshToken = req.cookies.jwt;
+  console.log('refreshToken', refreshToken)
+  if (!refreshToken) {
+    return res.status(401).json({ message: "Unatherized Access" });
+  }
+  try {
+    const decode = jwt.verify(refreshToken, REFRESH_TOKEN);
+    console.log('decode', decode)
+    const userData = await User.findById(decode.userId);
+    console.log('user', userData)
+    // jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
+    if (!user || !user.isActive) {
+      return res.status(403).json({ message: "user not found" });
+    }
+    const access_token = AccessToken({ id: userData._id, isAdmin: true });
+    const referesh_token = RefreshToken({ id: userData._id, isAdmin: true });
+    res.cookie("refreshToken", referesh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.json({ access_token });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+  // });
+};
+
 /*
 user signUp  
 */
@@ -65,7 +100,7 @@ const Register = async (req, res) => {
       message: "Successfully Registration, OTP Send Successfully",
       userId: userData._id,
     });
-  
+
     await sendVerificationMail(
       {
         email: user.email,
@@ -202,40 +237,36 @@ const Login = async (req, res) => {
   }
 };
 
+/**
+ * get user profile
+ */
 
-/*
-user refreshing token 
-*/
+const UserProfile =async (req,res)=>{
+  const id = req.userId?.id || req.userId;
+  try {
+    const userProfile = await User.findById(id)
+    console.log('userProfile', userProfile)
+    if (userProfile.isVerified) {
+      res.status(200).json({ message : "success",userProfile})
+    }else{
+      res.status(404).json({ message: "not allowed"})
+    }
+  } catch (error) {
+    res.status(404).json({ message: "user not fount"})
+  }
+}
 
-// const RefreshingToken = async (req, res) => {
-//   const refreshToken = req.cookies.jwt;
-//   if (!refreshToken) {
-//     return res.status(401).json({ message: "Unatherized Access" });
-//   }
-//   try {
-//     const decode = jwt.verify(RefreshingToken, REFRESH_TOKEN);
-//     const user = await User.findById(decode.userId);
-//     // jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
-//     if (!user) {
-//       return res.status(403).json({ message: "user not found" });
-//     }
-//     // const userData = await User.findById(user.id);
-//     // if (!userData || !userData.isActive) {
-//     //   return res.status(401).json({ message: "Unauthourized" });
-//     // }
+/**
+ * user logout
+ */
 
-//     const access_token = AccessToken({ id: userData._id, isAdmin: true });
-//     const referesh_token = RefreshToken({ id: userData._id, isAdmin: true });
-//     res.cookie("refreshToken", referesh_token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV !== "development",
-//       maxAge: 7 * 24 * 60 * 60 * 1000,
-//     });
-//     res.json({ access_token });
-//   } catch (error) {
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-//   // });
-// };
+const Logout = (req, res) => {
+  res.clearCookie("userjwt", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+  });
+  res.status(200).json({ message: "logout successfully" });
+};
 
-export { Register, VerifyOtp, ResendOtp, Login, };
+
+export { Register, VerifyOtp, ResendOtp, Login, RefreshingToken, UserProfile, Logout };

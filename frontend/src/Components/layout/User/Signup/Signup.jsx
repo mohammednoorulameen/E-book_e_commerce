@@ -88,7 +88,7 @@ const Signup = () => {
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
-        <hr className="w-1/2 mx-auto h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+        {/* <hr className="w-1/2 mx-auto h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" /> */}
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 className="mt-10 md:text-4.5xl text-4xl font-primary tracking-tighter leading-5 font-semibold text-center text-customColorTertiaryDark">
             Create Your Account

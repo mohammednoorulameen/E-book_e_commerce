@@ -51,7 +51,7 @@ const Otp = () => {
     }
 
     try {
-      const response = await verifyOtp({ userId, otp }).unwrap();
+      const response = await verifyOtp({ userId, otp });
       console.log(response);
       // if (response && response.access_token) {
       //   setOtp("");

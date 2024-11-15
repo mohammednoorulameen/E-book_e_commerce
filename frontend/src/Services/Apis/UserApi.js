@@ -61,7 +61,7 @@ export const userApi = createApi({
         providesTags:['getProducts']
       }),
 
-      /**
+    /**
      * get products detailes
      * 
      */
@@ -71,8 +71,34 @@ export const userApi = createApi({
         providesTags:['getProductsDetails']
       }),
 
+       /**
+     * get user profile
+     */
+
+    getUserProfile: builder.query({
+        query:() =>'/user/userProfile',
+        providesTags:['getUserProfile']    
+       }),
 
 
+    /**
+     * logout
+     */
+
+    logout: builder.mutation({
+        query:()=>({
+            url:'/user/logout',
+            method: 'POST',
+        })
+    }),
+
+    /**
+     * edit user detailes 
+     */
+
+    EditUserInfo: builder.mutation({
+        
+    })
 
 
 
@@ -84,6 +110,8 @@ useVerifyOtpMutation,
 useResendOtpMutation,
 useLoginMutation,
 useGetProductsQuery,
-useGetProductsDetailsQuery
+useGetProductsDetailsQuery,
+useGetUserProfileQuery,
+useLogoutMutation,
 
 } = userApi

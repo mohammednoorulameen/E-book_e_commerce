@@ -7,8 +7,8 @@ dotenv.config();
 create access token
 */
 
-const AccessToken = (id) => {
-    return jwt.sign({ id }, process.env.ACCESS_TOKEN, {
+const AccessToken = (userId) => {
+    return jwt.sign({ userId }, process.env.ACCESS_TOKEN, {
       expiresIn: "30m",
     });
   };
@@ -17,8 +17,8 @@ const AccessToken = (id) => {
   create a refresh token
   */
   
-  const RefreshToken = (id) => {
-    return jwt.sign({ id }, process.env.REFRESH_TOKEN, {
+  const RefreshToken = (userId) => {
+    return jwt.sign({ userId }, process.env.REFRESH_TOKEN, {
       expiresIn: "7d",
     });
   };
