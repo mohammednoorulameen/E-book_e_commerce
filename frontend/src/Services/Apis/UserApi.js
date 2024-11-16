@@ -97,9 +97,25 @@ export const userApi = createApi({
      */
 
     EditUserInfo: builder.mutation({
-        
-    })
+        query:(info) =>({
+            url:"/user/edit-userInfo",
+            method: 'POST',
+            body: info
+        }),
+        invalidatesTags:['getUserProfile']
+    }),
 
+    /**
+     * change password
+     */
+
+    ChangePass : builder.mutation({
+        query:(password) => ({
+            url:"/user/change-password",
+            method: 'POST',
+            body: password
+        })
+    })
 
 
     })
@@ -113,5 +129,8 @@ useGetProductsQuery,
 useGetProductsDetailsQuery,
 useGetUserProfileQuery,
 useLogoutMutation,
+useEditUserInfoMutation,
+useChangePassMutation,
+
 
 } = userApi

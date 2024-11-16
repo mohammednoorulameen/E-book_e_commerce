@@ -11,41 +11,30 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 const maxage = 7 * 24 * 60 * 60 * 1000;
 dotenv.config();
-// const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
-
-
 
 /*
 user refreshing token 
 */
 
 const RefreshingToken = async (req, res) => {
-  const refreshToken = req.cookies.jwt;
-  console.log('refreshToken', refreshToken)
+  const refreshToken = req.cookies.userjwt;
   if (!refreshToken) {
     return res.status(401).json({ message: "Unatherized Access" });
   }
   try {
-    const decode = jwt.verify(refreshToken, REFRESH_TOKEN);
-    console.log('decode', decode)
+    const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN);
+    console.log("user is :",decode)
     const userData = await User.findById(decode.userId);
-    console.log('user', userData)
-    // jwt.verify(RefreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
-    if (!user || !user.isActive) {
-      return res.status(403).json({ message: "user not found" });
+    console.log("userData", userData);
+    if (!userData) {
+      return res.status(404).json({ message: "user not found" });
     }
-    const access_token = AccessToken({ id: userData._id, isAdmin: true });
-    const referesh_token = RefreshToken({ id: userData._id, isAdmin: true });
-    res.cookie("refreshToken", referesh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== "development",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const access_token = AccessToken(userData._id );
     res.json({ access_token });
   } catch (error) {
+    console.log('serer error', error)
     res.status(500).json({ message: "Internal server error" });
   }
-  // });
 };
 
 /*
@@ -137,8 +126,8 @@ const VerifyOtp = async (req, res) => {
     await user.save();
     await Otp.deleteOne({ userId: req.body.userId });
 
-    const access_token = AccessToken({ id: user._id }); // generate access token
-    const refresh_token = RefreshToken({ id: user._id }); // generate refresh token
+    const access_token = AccessToken( user._id ); // generate access token
+    const refresh_token = RefreshToken( user._id ); // generate refresh token
 
     // send refresh token
     res.cookie("jwt", refresh_token, {
@@ -219,8 +208,8 @@ const Login = async (req, res) => {
     if (!user.isActive) {
       return res.status(403).json({ message: "Sorry, You were Blocked Admin" });
     }
-    const access_token = await AccessToken({ id: user._id }); // generate access tken
-    const refresh_token = await RefreshToken({ id: user._id }); // generate refresh token
+    const access_token =  AccessToken( user._id ); // generate access tken
+    const refresh_token =  RefreshToken( user._id); // generate refresh token
 
     res.cookie("userjwt", refresh_token, {
       httpOnly: true,
@@ -241,20 +230,19 @@ const Login = async (req, res) => {
  * get user profile
  */
 
-const UserProfile =async (req,res)=>{
-  const id = req.userId?.id || req.userId;
+const UserProfile = async (req, res) => {
+  const id = req.userId
   try {
-    const userProfile = await User.findById(id)
-    console.log('userProfile', userProfile)
+    const userProfile = await User.findById(id);
     if (userProfile.isVerified) {
-      res.status(200).json({ message : "success",userProfile})
-    }else{
-      res.status(404).json({ message: "not allowed"})
+      res.status(200).json({ message: "success", userProfile });
+    } else {
+      res.status(404).json({ message: "not allowed" });
     }
   } catch (error) {
-    res.status(404).json({ message: "user not fount"})
+    res.status(404).json({ message: "user not fount" });
   }
-}
+};
 
 /**
  * user logout
@@ -268,5 +256,62 @@ const Logout = (req, res) => {
   res.status(200).json({ message: "logout successfully" });
 };
 
+/**
+ * user edit information
+ */
 
-export { Register, VerifyOtp, ResendOtp, Login, RefreshingToken, UserProfile, Logout };
+const UserEditInfo = async (req, res) => {
+  const id = req?.userId?.id || req.userId
+  try {
+    if (!id) {
+      res.status(404).json({ message: "updating failed" })
+    }
+        await User.findByIdAndUpdate(id,req.body)
+        res.status(200).json({ message: "success"})
+  } catch (error) {
+    res.status(404).json({ message: "user not fount "})
+  }
+};
+
+/**
+ * change password
+ */
+
+const ChangePassword = async (req,res)=>{
+  const id = req?.userId?.id || req.userId
+  console.log('id', id)
+  const { currentPassword, password} = req.body
+  console.log('currentPassword,password', currentPassword,password)
+  try {
+    if (!id) {
+     return res.status(404).json({ message: "updating password failed" })
+    }
+    const user = await User.findById(id)
+    const verifyPassword = await bcrypt.compare(currentPassword,user.password) 
+    if (verifyPassword) {
+      const hashedPassword = await HashPassword(password);
+      await User.findByIdAndUpdate(id,{password: hashedPassword})
+      res.status(200).json({ message: "password change successfully"})
+    }else{
+     return res.status(400).json({ message: "password not maatch"})
+    }
+  } catch (error) {
+    res.status(404).json({ message: "user not fount"})
+  }
+}
+
+/**
+ * 
+ */
+
+export {
+  Register,
+  VerifyOtp,
+  ResendOtp,
+  Login,
+  RefreshingToken,
+  UserProfile,
+  Logout,
+  UserEditInfo,
+  ChangePassword,
+};

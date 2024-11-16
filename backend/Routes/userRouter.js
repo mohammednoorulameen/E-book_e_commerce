@@ -8,6 +8,8 @@ import {
   UserProfile,
   Logout,
   RefreshingToken,
+  UserEditInfo,
+  ChangePassword,
 } from "../Controllers/User/UserController.js";
 import {
   ProductDetails,
@@ -32,5 +34,7 @@ userRouter.post("/verifyOtp", VerifyOtp);
 userRouter.post("/resendOtp", ResendOtp);
 userRouter.post("/login", Login);
 userRouter.post("/logout", Logout);
+userRouter.post("/edit-userInfo",VerifyToken,UserEditInfo)
+userRouter.post("/change-password",VerifyToken, ChangePassword)
 
 export default userRouter;

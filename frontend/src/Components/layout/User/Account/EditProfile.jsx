@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import * as Yup from 'yup'
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
+import { useEditUserInfoMutation } from '../../../../Services/Apis/UserApi'
 
 const validationSchema = Yup.object().shape({
   username: Yup.string()
@@ -19,38 +20,55 @@ const validationSchema = Yup.object().shape({
 });
 
 const EditProfile = () => {
-  const userData = useSelector((state) => state.user.userProfile);
+  const userdata = useSelector((state) => state.user.userProfile);
   const [isEditing, setIsEditing] = useState(false);
-  const [updatedUserData, setUpdatedUserData] = useState(userData);
-  const navigate = useNavigate();
+  const [EditUserInfo] = useEditUserInfoMutation()
+  const [userData, setUserData ] = useState({
+    username : "",
+    email : "",
+    phone : "",
+  })
+
+  useEffect(() => {
+    if (userdata) {
+      setUserData(userdata)
+      console.log('userData', userData)
+
+    }
+  }, [userdata])
+  
   const formik = useFormik({
     initialValues:{
-      username : userData.username || "",
-      email : userData.email ||  "",
-      phone : userData.phone || ""
+      username : userdata.username || "",
+      email : userdata.email ||  "",
+      phone : userdata.phone || "",
     },
     validationSchema : validationSchema,
     onSubmit: async (userData) => {
       try {
-        console.log('userData', userData)
+       const response =  await EditUserInfo(userData)
+
+      //  if (response.data) {
+      //   navigate('/')
+      //  }
       } catch (error) {
+        console.log(error);
         
       }
+      setIsEditing(false)
+
     }
   })
-  
-
-  
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white rounded-xl p-6 shadow-md">
       <h2 className="text-2xl font-semibold text-gray-900">
         {isEditing ? "Update Details" : "User Details"}
       </h2>
 
       {isEditing ? (
         <form onSubmit={formik.handleSubmit}>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6  sm:grid-cols-2">
             <div>
               <label
                 htmlFor="username"
@@ -62,6 +80,7 @@ const EditProfile = () => {
                 <TextField
                   id="username"
                   type="text"
+                  name="username"
                   value={formik.values.username}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -69,6 +88,9 @@ const EditProfile = () => {
                   fullWidth
                 />
               </div>
+              {formik.touched.username && formik.errors.username && (
+          <div className="text-red-600">{formik.errors.username}</div>
+        )}
             </div>
             <div>
               <label
@@ -81,6 +103,7 @@ const EditProfile = () => {
                 <TextField
                   id="email"
                   type="text"
+                  name="email"
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -88,6 +111,9 @@ const EditProfile = () => {
                   fullWidth
                 />
               </div>
+              {formik.touched.email && formik.errors.email && (
+          <div className="text-red-600">{formik.errors.email}</div>
+        )}
             </div>
             <div>
               <label
@@ -100,6 +126,7 @@ const EditProfile = () => {
                 <TextField
                   id="phone"
                   type="number"
+                  name="phone"
                   value={formik.values.phone}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -107,6 +134,9 @@ const EditProfile = () => {
                   fullWidth
                 />
               </div>
+              {formik.touched.phone && formik.errors.phone && (
+          <div className="text-red-600">{formik.errors.phone}</div>
+        )}
             </div>
           </div>
 

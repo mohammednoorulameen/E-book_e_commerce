@@ -2,11 +2,9 @@ import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
-// import { setCredentials } from "../../../../Redux/Slice/AuthSlice";
 import * as Yup from "yup";
 import { useLoginMutation } from "../../../../Services/Apis/UserApi";
 import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
-// import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../../../Services/firebase/firebaseConfig.js";
 
 const validationSchema = Yup.object().shape({
@@ -21,7 +19,6 @@ const validationSchema = Yup.object().shape({
 const Login = () => {
   const [login, {  isError, isSuccess, error: authError }] =
     useLoginMutation();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {

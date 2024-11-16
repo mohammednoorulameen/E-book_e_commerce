@@ -8,8 +8,8 @@ create access token
 */
 
 const AccessToken = (userId) => {
-    return jwt.sign({ userId }, process.env.ACCESS_TOKEN, {
-      expiresIn: "30m",
+    return jwt.sign({userId} , process.env.ACCESS_TOKEN, {
+      expiresIn: "10s",
     });
   };
   
@@ -18,7 +18,7 @@ const AccessToken = (userId) => {
   */
   
   const RefreshToken = (userId) => {
-    return jwt.sign({ userId }, process.env.REFRESH_TOKEN, {
+    return jwt.sign( {userId} , process.env.REFRESH_TOKEN, {
       expiresIn: "7d",
     });
   };
