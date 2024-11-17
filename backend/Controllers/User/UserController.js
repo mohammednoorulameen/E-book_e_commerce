@@ -6,6 +6,7 @@ import sendVerificationMail from "../../Utils/mailerService.js";
 import { AccessToken, RefreshToken } from "../../Utils/Tokens.js";
 import { HashPassword } from "../../Utils/HashPassword.js";
 import { GenerateOtp } from "../../Utils/GenerateOtp.js";
+import Address from "../../Models/AddressModal.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
@@ -23,16 +24,16 @@ const RefreshingToken = async (req, res) => {
   }
   try {
     const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN);
-    console.log("user is :",decode)
+    console.log("user is :", decode);
     const userData = await User.findById(decode.userId);
     console.log("userData", userData);
     if (!userData) {
       return res.status(404).json({ message: "user not found" });
     }
-    const access_token = AccessToken(userData._id );
+    const access_token = AccessToken(userData._id);
     res.json({ access_token });
   } catch (error) {
-    console.log('serer error', error)
+    console.log("serer error", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -126,8 +127,8 @@ const VerifyOtp = async (req, res) => {
     await user.save();
     await Otp.deleteOne({ userId: req.body.userId });
 
-    const access_token = AccessToken( user._id ); // generate access token
-    const refresh_token = RefreshToken( user._id ); // generate refresh token
+    const access_token = AccessToken(user._id); // generate access token
+    const refresh_token = RefreshToken(user._id); // generate refresh token
 
     // send refresh token
     res.cookie("jwt", refresh_token, {
@@ -208,8 +209,8 @@ const Login = async (req, res) => {
     if (!user.isActive) {
       return res.status(403).json({ message: "Sorry, You were Blocked Admin" });
     }
-    const access_token =  AccessToken( user._id ); // generate access tken
-    const refresh_token =  RefreshToken( user._id); // generate refresh token
+    const access_token = AccessToken(user._id); // generate access tken
+    const refresh_token = RefreshToken(user._id); // generate refresh token
 
     res.cookie("userjwt", refresh_token, {
       httpOnly: true,
@@ -231,7 +232,7 @@ const Login = async (req, res) => {
  */
 
 const UserProfile = async (req, res) => {
-  const id = req.userId
+  const id = req.userId;
   try {
     const userProfile = await User.findById(id);
     if (userProfile.isVerified) {
@@ -261,15 +262,15 @@ const Logout = (req, res) => {
  */
 
 const UserEditInfo = async (req, res) => {
-  const id = req?.userId?.id || req.userId
+  const id = req?.userId?.id || req.userId;
   try {
     if (!id) {
-      res.status(404).json({ message: "updating failed" })
+      res.status(404).json({ message: "updating failed" });
     }
-        await User.findByIdAndUpdate(id,req.body)
-        res.status(200).json({ message: "success"})
+    await User.findByIdAndUpdate(id, req.body);
+    res.status(200).json({ message: "success" });
   } catch (error) {
-    res.status(404).json({ message: "user not fount "})
+    res.status(404).json({ message: "user not fount " });
   }
 };
 
@@ -277,32 +278,116 @@ const UserEditInfo = async (req, res) => {
  * change password
  */
 
-const ChangePassword = async (req,res)=>{
-  const id = req?.userId?.id || req.userId
-  console.log('id', id)
-  const { currentPassword, password} = req.body
-  console.log('currentPassword,password', currentPassword,password)
+const ChangePassword = async (req, res) => {
+  const id = req?.userId?.id || req.userId;
+  console.log("id", id);
+  const { currentPassword, password } = req.body;
+  console.log("currentPassword,password", currentPassword, password);
   try {
     if (!id) {
-     return res.status(404).json({ message: "updating password failed" })
+      return res.status(404).json({ message: "updating password failed" });
     }
-    const user = await User.findById(id)
-    const verifyPassword = await bcrypt.compare(currentPassword,user.password) 
+    const user = await User.findById(id);
+    const verifyPassword = await bcrypt.compare(currentPassword, user.password);
     if (verifyPassword) {
       const hashedPassword = await HashPassword(password);
-      await User.findByIdAndUpdate(id,{password: hashedPassword})
-      res.status(200).json({ message: "password change successfully"})
-    }else{
-     return res.status(400).json({ message: "password not maatch"})
+      await User.findByIdAndUpdate(id, { password: hashedPassword });
+      res.status(200).json({ message: "password change successfully" });
+    } else {
+      return res.status(400).json({ message: "password not maatch" });
     }
   } catch (error) {
-    res.status(404).json({ message: "user not fount"})
+    res.status(404).json({ message: "user not fount" });
+  }
+};
+
+/**
+ * add address
+ */
+
+const AddAddress = async (req, res) => {
+  const user_id = req.userId;
+
+  const {
+    name,
+    phone,
+    pincode,
+    locality,
+    address,
+    city,
+    state,
+    landmark,
+    altPhone,
+    addressType,
+  } = req.body;
+
+  console.log("state,name,locality", state, name, locality);
+  try {
+    const newAddress = Address.create({
+      user_id,
+      name,
+      phone,
+      pincode,
+      locality,
+      address,
+      city,
+      state,
+      landmark,
+      altPhone,
+      addressType,
+    });
+
+    if (newAddress) {
+      res.status(200).json({ message: "address added success" });
+    }
+  } catch (error) {
+    res.state(500).json({ message: "address adding failed" });
+  }
+};
+
+/**
+ * get user address
+ */
+
+const GetAddress = async (req, res) => {
+  const user_id = req.userId;
+  try {
+    const addresses = await Address.find({ user_id: user_id });
+    res.status(200).json({ message: "address addedd successfully", addresses });
+  } catch (error) {
+    res.status(500).json({ message: "address addedd failed" });
+  }
+};
+
+/**
+ * user Edit address
+ */
+
+const EditAddress = async (req,res) =>{
+  const { id } = req.body
+  try {
+       const address =  await Address.findByIdAndUpdate(id,req.body)
+    console.log('address', address)
+    res.status(200).json({ message: "Address update successfully" })
+  } catch (error) {
+    res.status(500).json({ message: "Address update failed" })
   }
 }
 
 /**
- * 
+ * delete address
  */
+
+const DeleteAddress = async (req,res)=>{
+  
+  const {address_id} = req.body
+  try {
+    await Address.findOneAndDelete({_id:address_id})
+    res.status(200).json({ message: "delete address successfully"})
+  } catch (error) {
+    res.status(500).json({ message: "delete address failed"})
+  }
+}
 
 export {
   Register,
@@ -314,4 +399,8 @@ export {
   Logout,
   UserEditInfo,
   ChangePassword,
+  AddAddress,
+  GetAddress,
+  EditAddress,
+  DeleteAddress,
 };

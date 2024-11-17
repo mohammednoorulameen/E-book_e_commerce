@@ -115,9 +115,58 @@ export const userApi = createApi({
             method: 'POST',
             body: password
         })
+    }),
+
+    /**
+     * add address
+     */
+
+    AddAddress : builder.mutation({
+        query:(form)=>({
+            url:"/user/add-address",
+            method: 'POST',
+            body: form
+        }),
+        invalidatesTags:['getAddresses']
+    }),
+
+    /**
+     * get address 
+     */
+
+    GetAddresses: builder.query({
+        query: ()=> '/user/user-address',
+        providesTags:['getAddresses']
+    }),
+
+    /**
+     * edit address
+     */
+
+    EditAddress: builder.mutation({
+        query:(form)=>({
+            url:"/user/Edit-address",
+            method: 'PUT',
+            body: form
+        }),
+        invalidatesTags:['getAddresses']
+    }),
+
+    /**
+     * delete address
+     */
+
+    DeleteAddress: builder.mutation({
+        query:(address_id)=>({
+            url:"/user/delete-address",
+            method: 'DELETE',
+            body: address_id
+        }),
+        invalidatesTags:['getAddress']
     })
 
 
+// ----------
     })
 })
 export const {
@@ -131,6 +180,10 @@ useGetUserProfileQuery,
 useLogoutMutation,
 useEditUserInfoMutation,
 useChangePassMutation,
+useAddAddressMutation,
+useGetAddressesQuery,
+useEditAddressMutation,
+useDeleteAddressMutation,
 
 
 } = userApi

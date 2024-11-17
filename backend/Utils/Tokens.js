@@ -9,7 +9,7 @@ create access token
 
 const AccessToken = (userId) => {
     return jwt.sign({userId} , process.env.ACCESS_TOKEN, {
-      expiresIn: "10s",
+      expiresIn: "3m",
     });
   };
   

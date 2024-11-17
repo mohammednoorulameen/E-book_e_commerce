@@ -35,7 +35,7 @@ export default function Header() {
   },[dispatch,userProfile])
   
   const userData=useSelector(state=>state.user.userProfile)
-  console.log('userData', userData)
+
 
   /**
    * handling tab change

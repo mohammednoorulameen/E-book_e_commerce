@@ -32,8 +32,6 @@ const EditProfile = () => {
   useEffect(() => {
     if (userdata) {
       setUserData(userdata)
-      console.log('userData', userData)
-
     }
   }, [userdata])
   
