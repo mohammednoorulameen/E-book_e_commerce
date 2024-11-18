@@ -63,10 +63,8 @@ const [showPassword, setShowPassword] = useState({
     console.log(error);
 
     if (error?.status === 401 || error?.status === 403) {
-        // Handle unauthorized errors (e.g., redirect to login)
         console.log("Session expired, please log in again.");
       } else if (error?.status === 400) {
-        // Handle validation or incorrect current password errors
         console.log("Incorrect current password.");
       } else {
         console.log("An unexpected error occurred.");
@@ -75,6 +73,11 @@ const [showPassword, setShowPassword] = useState({
     }
   })
 
+  /**
+   * handle forgot password
+   */
+
+ 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -89,7 +92,8 @@ const [showPassword, setShowPassword] = useState({
         {error &&  <p className="text-red-500">not match</p> }
         {isSuccess && <p className="text-green-500">success</p> }
         <Link
-          to="/login/forgot-password"
+
+          to="/forgot-password"
           className="text-sm font-medium text-blue-500 hover:text-blue-700 transition-colors duration-150 ease-in-out"
         >
           Forgot password?

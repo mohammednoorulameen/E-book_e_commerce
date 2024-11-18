@@ -19,7 +19,7 @@ const sidebarItems = [
   { name: "Products", icon: FaList, path: "/admin/products" },
   { name: "Users", icon: FaUsers, path: "/admin/users" },
   { name: "Categories", icon: FaCalendar, path: "/admin/category" },
-  { name: "Orders", icon: FaShoppingCart, path: "" },
+  { name: "Orders", icon: FaShoppingCart, path: "/admin/orders" },
   { name: "Coupons", icon: FaPercent, path: "" },
   { name: "Banners", icon: FaDesktop, path: "" },
   { name: "Payments", icon: FaCreditCard, path: "" },

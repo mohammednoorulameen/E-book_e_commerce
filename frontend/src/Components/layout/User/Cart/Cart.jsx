@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ShoppingCartIcon, ArrowRightIcon, TrashIcon } from "@heroicons/react/outline";
 import { useGetCartItemsQuery,useDeleteCartItemMutation } from '../../../../Services/Apis/UserApi'
+import { useNavigate } from "react-router-dom";
+
+
+
 const Cart = () => {
+  const navigate = useNavigate()
  const [cartItems , setCartItems] = useState([])
   const { data:cart} = useGetCartItemsQuery()
   const [DeleteCartItem] = useDeleteCartItemMutation()
@@ -42,6 +47,14 @@ const Cart = () => {
   const calculateTotal = () => {
     return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   };
+
+  /**
+   * Handle check out page 
+   */
+
+  const HandleCheckOut = async () =>{
+    navigate("/check-out")
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen py-8">
@@ -110,7 +123,7 @@ const Cart = () => {
           <div className="text-right sm:text-left w-full sm:w-auto">
             <p className="text-lg font-semibold">Total:</p>
             <p className="text-2xl font-bold">₹{calculateTotal().toFixed(2)}</p>
-            <button className="mt-4 px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
+            <button onClick={HandleCheckOut} className="mt-4 px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
               <ArrowRightIcon className="w-5 h-5" />
               Proceed to Checkout
             </button>

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Cart from "../../Models/CartModel.js";
-
+import Product from '../../Models/ProductModel.js'
 /**
  * add to cart
  */
@@ -9,8 +9,34 @@ const AddCart = async (req, res) => {
   const userId = req.userId;
   const { product_id, price, quantity = 1 } = req.body;
   try {
-    let cart = await Cart.findOne({ user_id: userId });
-    // console.log('cart', cart);
+    /**
+     * handle stock quantity
+     */
+    const product = await Product.findById(product_id)
+    if (!product) {
+      return res.status(404).json({ message: "product not fount"})
+    }
+
+    let cart = await Cart.findOne({user_id:userId})
+
+    const ProductAlreadyinCart = cart?.items.some((item)=>{
+      item.product_id.equals(product_id)
+    })
+    if (ProductAlreadyinCart) {
+      
+      if (product.stock < quantity) {
+        return res.status(400).json({ message: "insufficient stock"})
+      }
+      
+      product.stock -= quantity
+      await product.save()
+    }
+    // let cart = await Cart.findOne({ user_id: userId });
+
+
+    /**
+     * handle add to cart
+     */
 
     if (cart) {
       const existingProductIndex = cart.items.findIndex((item) =>

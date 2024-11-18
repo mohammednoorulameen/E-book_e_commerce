@@ -9,6 +9,7 @@ import AdminAddProductPage from '../Pages/Admin/AdminAddProductPage'
 import AdminEditProductPage from '../Pages/Admin/AdminEditProductPage'
 import AdminAuth from '../Utils/Protector/AdminAuth'
 import AdminPrivate from '../Utils/Protector/AdminPrivate'
+import AdminOdersPage from '../Pages/Admin/AdminOdersPage'
 
 
 const adminRoutes=[
@@ -56,6 +57,11 @@ const adminRoutes=[
       {
         path: 'EditProduct/:product_id',
         element: <AdminEditProductPage/>
+      },
+
+      {
+        path:'orders',
+        element: <AdminOdersPage/>
       }
 
     ]

@@ -56,7 +56,8 @@ const AdminEditProduct = () => {
   const [EditProduct, { isError }] = useEditProductMutation();
   const { data } = useGetCategoryQuery({ page: 1 });
   const [categoryList, SetCategoryList] = useState([]);
-  const [images, setImages] = useState([]);
+  // const [images, setImages] = useState([]);
+  const [images, setImages] = useState(product?.product?.images || []);
   const [crop, setCrop] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
   const [completedCrop, setCompletedCrop] = useState(null);
@@ -74,8 +75,8 @@ const AdminEditProduct = () => {
       publisher: product?.product?.publisher || "",
       author: product?.product?.author || "",
       language: product?.product?.language || "",
-      images: product?.product?.images || [],
       _id: product?.product?._id || "",
+      images: product?.product?.images || [],
     },
     validationSchema: validationSchema,
     enableReinitialize: true,
@@ -95,13 +96,6 @@ const AdminEditProduct = () => {
     },
   });
 
-  // if (product?.product?.images) {
-
-  //   setimagepreview(product?.product?.images)
-  // }
-
-  // console.log(imagepreview)
-
   /**
    * active categories of list
    */
@@ -118,6 +112,7 @@ const AdminEditProduct = () => {
   /**
    * image upload
    */
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -139,20 +134,7 @@ const AdminEditProduct = () => {
    */
 
   const handleEditCropComplete = async () => {
-    // if (completedCrop && imageRef.current) {
-    //   const croppedImageURL = await getCroppedImg(
-    //     imageRef.current,
-    //     completedCrop
-    //   );
-    //   const response = await fetch(croppedImageURL);
-    //   const blob = await response.blob();
-    //   const file = new File([blob], "cropped.jpeg", { type: "image/jpeg" });
-    //   const imgUrl = await imageUploadCloudinery(file);
-    //   setImages((prevImages) => [...prevImages, imgUrl]);
-    //   formik.setFieldValue("images", [...formik.values.images, imgUrl]);
-    //   // setCurrentImage(null);
-    //   // setCrop(null);
-    // }
+    
     if (completedCrop && imageRef.current) {
       const croppedImageURL = await getCroppedImg(
         imageRef.current,
@@ -173,9 +155,54 @@ const AdminEditProduct = () => {
    * delected image deleting
    */
 
-  const handleImageDelete = (index) => {
-    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  };
+  // const handleImageDelete = (index) => {
+  //   console.log("check");
+    
+  //   setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  // };
+
+  // const handleImageDelete = (index) => {
+  //   setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  // };
+  
+  // -----------------------------
+
+  // const handleImageDelete = (index, imageToDelete) => {
+  //   // If deleting from the preview images
+  //   console.log("trigger")
+  //   if (imageToDelete === 'preview') {
+  //     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  //     formik.setFieldValue("images", formik.values.images.filter((_, i) => i !== index));
+  //   }
+  //   // If deleting from the originally loaded product images
+  //   else if (imageToDelete === 'product') {
+  //     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  //     formik.setFieldValue("images", formik.values.images.filter((_, i) => i !== index));
+  //   }
+  // };
+//   const [productImages, setProductImages] = useState(product?.product?.images || []);
+
+// // Handle image deletion
+// const handleImageDelete = (index) => {
+//   // Create a new array by filtering out the image at the given index
+//   const updatedImages = productImages.filter((_, i) => i !== index);
+//   // Update the state with the filtered images
+//   setProductImages(updatedImages);
+// }
+
+const handleImageDelete = (index) => {
+  console.log("check")
+  // Update local state for images
+  const updatedImages = images.filter((_, i) => i !== index);
+  setImages(updatedImages);
+
+  // Update Formik's values
+  formik.setFieldValue('images', updatedImages);
+};
+
+  // ---------------------------
+
+
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -402,10 +429,11 @@ const AdminEditProduct = () => {
 
           {/* ------------------------------------------------- */}
           <div className="grid grid-cols-3 gap-4 mt-4">
-            {images.map((image, index) => (
+            {/* {images.map((image, index) => (
               <div key={index} className="relative">
                 <img
                   src={image}
+                  
                   alt={`Product ${index + 1}`}
                   className="w-full h-32 object-cover rounded"
                 />
@@ -417,7 +445,28 @@ const AdminEditProduct = () => {
                   <Trash2 size={16} />
                 </button>
               </div>
-            ))}
+            ))} */}
+            {images && images.length > 0 && (
+  <div className="flex flex-wrap gap-4">
+    {images.map((image, index) => (
+      <div key={index} className="relative">
+        <img
+          src={image}
+          alt={`Product image ${index}`}
+          className="w-32 h-32 object-cover rounded-lg"
+        />
+        <button
+          type="button"
+          onClick={() => handleImageDelete(index)}
+          className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
           </div>
           {/* ------------------------------------------------- */}
 
@@ -432,10 +481,7 @@ const AdminEditProduct = () => {
         >
           Update Product
         </button>
-        {/* {images.map((curr,i)=>{
-<div>{curr}</div>
-            })}
-            <div>asdf</div> */}
+       
       </form>
     </div>
   );

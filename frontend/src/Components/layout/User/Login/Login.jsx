@@ -141,12 +141,12 @@ const Login = () => {
               <div className="grid grid-cols-2 ">
                 <div>
                   <p className="  text-start text-sm text-gray-500">
-                    <a
-                      href="#"
+                    <Link
+                      to={'/forgot-password'}
                       className="font-semibold  text-black hover:underline"
                     >
                       Forgotpassword?
-                    </a>
+                    </Link>
                   </p>
                 </div>
                 <div>

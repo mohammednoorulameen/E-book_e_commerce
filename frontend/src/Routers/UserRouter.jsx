@@ -19,6 +19,9 @@ import {
   SettingsPage
 } from "../Pages/User/AccountPage";
 import UserPrivate from "../Utils/Protector/UserPrivate";
+import ForgotPasswordPage from "../Pages/User/ForgotPasswordPage";
+import CheckOutPage from "../Pages/User/CheckOutPage";
+import NewOrderPaymentPage from "../Pages/User/PaymentsPage";
 
 
 const UserRouter = [
@@ -65,9 +68,13 @@ const UserRouter = [
         element: (
           <UserAuthenticated>
             <LoginPage />
-            //{" "}
+            {/* //{" "} */}
           </UserAuthenticated>
         ),
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPasswordPage />
       },
 
       {
@@ -125,7 +132,19 @@ const UserRouter = [
         element: <UserPrivate>
           <CartPage/>
         </UserPrivate>
-      }
+      },
+
+      {
+        path:"/check-out",
+        element: <CheckOutPage/>
+
+      },
+
+      {
+        path:"/new-order-payment",
+        element: <NewOrderPaymentPage/>
+      },
+
     ],
   },
 ];
