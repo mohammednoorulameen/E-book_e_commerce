@@ -9,33 +9,48 @@ import {
   FaSignOutAlt,
   FaClipboardList,
 } from "react-icons/fa";
+import {
+  ShoppingCartIcon,
+  HeartIcon,
+  UserIcon,
+} from "@heroicons/react/outline";
 import { Link, useNavigate } from "react-router-dom";
-import { useLogoutMutation,useGetUserProfileQuery } from '../../Services/Apis/UserApi'
+import {
+  useLogoutMutation,
+  useGetUserProfileQuery,
+  useGetCartItemsQuery,
+} from "../../Services/Apis/UserApi";
 import { useDispatch, useSelector } from "react-redux";
-import { clearUser,setUser } from '../../Redux/Slice/UserSlice/UserSlice'
+import { clearUser, setUser } from "../../Redux/Slice/UserSlice/UserSlice";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("HOME");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dispatch = useDispatch();
-  const navigate  = useNavigate()
+  const navigate = useNavigate();
   const [logout] = useLogoutMutation();
-  const {data:profile} = useGetUserProfileQuery()
-  const userProfile = profile?.userProfile
-  
+  const { data: profile } = useGetUserProfileQuery();
+  const userProfile = profile?.userProfile;
+
+  const { data: cart, isLoading } = useGetCartItemsQuery();
+
+  // Calculate total count of items in cart
+  const itemCount =
+    cart?.cartItems?.reduce((total, item) => total + item.items.quantity, 0) ||
+    0;
+
   /**
-   * setting user data 
+   * setting user data
    */
 
-  useEffect(()=>{
+  useEffect(() => {
     if (userProfile) {
-      dispatch(setUser(userProfile))
+      dispatch(setUser(userProfile));
     }
-  },[dispatch,userProfile])
-  
-  const userData=useSelector(state=>state.user.userProfile)
+  }, [dispatch, userProfile]);
 
+  const userData = useSelector((state) => state.user.userProfile);
 
   /**
    * handling tab change
@@ -55,15 +70,15 @@ export default function Header() {
   };
 
   /**
-   * handle logout 
+   * handle logout
    */
 
-  const HandleLogout = async () =>{
-    await logout()
-    localStorage.removeItem('userToken');
-    dispatch(clearUser())
-    navigate('/') 
-  }
+  const HandleLogout = async () => {
+    await logout();
+    localStorage.removeItem("userToken");
+    dispatch(clearUser());
+    navigate("/");
+  };
   return (
     <header>
       {/* Top Bar */}
@@ -96,45 +111,42 @@ export default function Header() {
           <div className="flex items-center gap-11 text-lg ml-auto">
             {/* Login with Dropdown */}
             <div className="relative">
-              { userData ? (
+              {userData ? (
                 <button
-                onClick={toggleDropdown}
-                className="flex items-center gap-1 text-gray-800 group focus:outline-none"
-              >
-                <FaUser />
-                <span className="text-black">Account</span>
-              </button>
-              ):(
+                  onClick={toggleDropdown}
+                  className="flex items-center gap-1 text-gray-800 group focus:outline-none"
+                >
+                  <UserIcon className="w-6 h-6 stroke-black stroke-2 fill-transparent" />
+                  {/* <span className="text-black">Account</span> */}
+                </button>
+              ) : (
                 <button
-                onClick={toggleDropdown}
-                className="flex items-center gap-1 text-gray-800 group focus:outline-none"
-              >
-                <FaUser />
-                <span className="text-black">Login</span>
-              </button>
+                  onClick={toggleDropdown}
+                  className="flex items-center gap-1 text-gray-800 group focus:outline-none"
+                >
+                  <FaUser />
+                  {/* <span className="text-black">Login</span> */}
+                </button>
               )}
               {isDropdownOpen && (
                 <div className="absolute text-sm right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50">
                   {userData ? (
                     <Link
-                    to="/account"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
-                  >
-                    <FaUser />
-                    <span>My Profile</span>
-                  </Link>
-                  ):(
-
-                   <Link
-                   to="/login"
-                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
-                 >
-                   <FaUser />
-                   <span>Login</span>
-                 </Link>
+                      to="/account"
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    >
+                      <UserIcon className="w-6 h-6 stroke-black stroke-2 fill-transparent" />
+                      <span>My Profile</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaUser />
+                      <span>Login</span>
+                    </Link>
                   )}
-                  
-
 
                   <Link
                     to="/wishlist"
@@ -150,25 +162,39 @@ export default function Header() {
                     <FaClipboardList />
                     <span>Orders</span>
                   </Link>
-                 { userData && <Link
-                    onClick={HandleLogout}
-                    className="flex text-red-500 items-center gap-2 px-4 py-2 hover:bg-gray-100"
-                  >
-                    <FaSignOutAlt />
-                    <span >Logout</span>
-                  </Link>}
+                  {userData && (
+                    <Link
+                      onClick={HandleLogout}
+                      className="flex text-red-500 items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaSignOutAlt />
+                      <span>Logout</span>
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
 
-            <a href="#" className="flex items-center gap-1 text-gray-800">
-              <FaShoppingCart />
-              <span>Cart</span>
-            </a>
-            <a href="#" className="flex items-center gap-1 text-gray-800">
-              <FaHeart />
-              <span>Wishlist</span>
-            </a>
+            <Link
+              to={"/cart"}
+              className="flex items-center gap-1 text-gray-800 relative"
+            >
+              <ShoppingCartIcon className="w-6 h-6 stroke-black stroke-2 fill-transparent" />
+
+              {/* Red Badge */}
+              {!isLoading && itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              to={"/cart"}
+              className="flex items-center gap-1 text-gray-800"
+            >
+              <HeartIcon className="w-6 h-6 stroke-black stroke-2 fill-transparent" />
+            </Link>
             <a href="#" className="flex items-center gap-1 text-gray-800">
               <FaEllipsisV />
             </a>
@@ -177,23 +203,19 @@ export default function Header() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="bg-white px-5 fixed top-16 w-full z-30"> {/* Adjusted margin-top */}
+      <nav className="bg-white px-5 fixed top-16 w-full z-30">
         <div className="max-w-screen-xl mx-auto flex justify-center gap-4">
           {[
             { label: "HOME", path: "/" },
             { label: "SHOP", path: "/shop" },
             { label: "CATEGORIES", path: "/categories" },
             { label: "AUTHORS", path: "/authors" },
-            { label: "CONTACT", path: "/contact" },
-            { label: "ABOUT US", path: "/about" },
           ].map((tab) => (
             <Link
               key={tab.label}
               to={tab.path}
               onClick={() => handleTabChange(tab.label)}
-              className={`text-black text-sm font-medium px-5 py-3 ${
-                activeTab === tab.label ? "border-b-2 border-yellow-500" : ""
-              }`}
+              className="text-black text-sm font-medium px-5 py-3 hover:border-b-2 hover:border-black"
             >
               {tab.label}
             </Link>

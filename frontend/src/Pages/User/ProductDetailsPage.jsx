@@ -1,5 +1,5 @@
 import React from 'react'
-import ProductDetails from '../../Components/layout/User/ProductDetails/ProductDetails'
+import ProductDetails from '../../Components/layout/User/Products/ProductDetails'
 
 const ProductDetailsPage = () => {
   return (

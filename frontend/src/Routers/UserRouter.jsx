@@ -9,6 +9,7 @@ import Footer from "../Components/Common/Footer";
 import ShopPage from "../Pages/User/ShopPage";
 import ProductDetailsPage from "../Pages/User/ProductDetailsPage";
 import UserAuthenticated from "../Utils/Protector/UserAuthenticated";
+import CartPage from '../Pages/User/CartPage'
 import {
   AccountPage,
   EditProfilePage,
@@ -18,6 +19,7 @@ import {
   SettingsPage
 } from "../Pages/User/AccountPage";
 import UserPrivate from "../Utils/Protector/UserPrivate";
+
 
 const UserRouter = [
   {
@@ -117,6 +119,13 @@ const UserRouter = [
           }
         ],
       },
+
+      {
+        path: "/cart",
+        element: <UserPrivate>
+          <CartPage/>
+        </UserPrivate>
+      }
     ],
   },
 ];

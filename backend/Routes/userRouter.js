@@ -20,6 +20,12 @@ import {
   ListProduct,
 } from "../Controllers/User/UserProductController.js";
 import { VerifyToken } from "../Middlewares/VerifyToken.js";
+import {
+  AddCart,
+  GetCartItems,
+  DeleteCartProduct,
+} from "../Controllers/User/CartController.js";
+
 /**
  * GET
  */
@@ -29,6 +35,7 @@ userRouter.get("/list-Products", ListProduct);
 userRouter.get("/refresh-token", RefreshingToken);
 userRouter.get("/userProfile", VerifyToken, UserProfile);
 userRouter.get("/user-address", VerifyToken, GetAddress);
+userRouter.get("/get-cart-items", VerifyToken, GetCartItems);
 
 /**
  * POST
@@ -42,16 +49,20 @@ userRouter.post("/logout", Logout);
 userRouter.post("/edit-userInfo", VerifyToken, UserEditInfo);
 userRouter.post("/change-password", VerifyToken, ChangePassword);
 userRouter.post("/add-address", VerifyToken, AddAddress);
+userRouter.post("/add-cart", VerifyToken, AddCart);
 
 /**
  * PUT
  */
 
-userRouter.put("/Edit-address",VerifyToken,EditAddress)
+userRouter.put("/Edit-address", VerifyToken, EditAddress);
 
 /**
  * DELETE
  */
 
-userRouter.delete("/delete-address",VerifyToken,DeleteAddress)
+userRouter.delete("/delete-address", VerifyToken, DeleteAddress);
+userRouter.delete("/delete-cart-product", VerifyToken, DeleteCartProduct);
+
+
 export default userRouter;

@@ -163,6 +163,41 @@ export const userApi = createApi({
             body: address_id
         }),
         invalidatesTags:['getAddress']
+    }),
+
+    /**
+     * Add to cart
+     */
+
+    AddCart: builder.mutation({
+        query:(items)=>({
+            url:"/user/add-cart",
+            method: 'POST',
+            body: items
+        }),
+        invalidatesTags:['getProductsDetails',"getCartItems"]
+    }),
+
+    /**
+     * get cart items 
+     */
+
+    GetCartItems: builder.query({
+        query:()=> '/user/get-cart-items',
+        providesTags:["getCartItems"]
+    }),
+
+    /**
+     * delete cart item 
+     */
+
+    DeleteCartItem: builder.mutation({
+        query:(product_id)=>({
+            url:"/user/delete-cart-product",
+            method:"DELETE",
+            body:product_id
+        }),
+        invalidatesTags:["getCartItems","getProductsDetails"]
     })
 
 
@@ -184,6 +219,8 @@ useAddAddressMutation,
 useGetAddressesQuery,
 useEditAddressMutation,
 useDeleteAddressMutation,
-
+useAddCartMutation, 
+useGetCartItemsQuery,
+useDeleteCartItemMutation,
 
 } = userApi
