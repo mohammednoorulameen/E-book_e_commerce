@@ -52,6 +52,18 @@ export const userApi = createApi({
     }),
 
     /**
+     * google authentication
+     */
+
+    GoogleAuth: builder.mutation({
+        query: (userToken)=>({
+            url: "/user/google-login",
+            method: "POST",
+            body: userToken
+        })
+    }),
+
+    /**
      * get products
      * product pagination
      */
@@ -198,6 +210,20 @@ export const userApi = createApi({
             body:product_id
         }),
         invalidatesTags:["getCartItems","getProductsDetails"]
+    }),
+
+    PlaceOrder: builder.mutation({
+        query:(items)=>({
+            url:"/user/place-order",
+            method: "POST",
+            body:items
+        }),
+        invalidatesTags:['getCartItems','getOders']
+    }),
+
+    getOrderDetailes: builder.query({
+        query:({page,limit})=> `/user/get-order-items?page=${page}$limit=${limit}`,
+        providesTags:['getOders']
     })
 
 
@@ -209,6 +235,7 @@ useRegisterMutation,
 useVerifyOtpMutation,
 useResendOtpMutation,
 useLoginMutation,
+useGoogleAuthMutation,
 useGetProductsQuery,
 useGetProductsDetailsQuery,
 useGetUserProfileQuery,
@@ -222,5 +249,7 @@ useDeleteAddressMutation,
 useAddCartMutation, 
 useGetCartItemsQuery,
 useDeleteCartItemMutation,
+usePlaceOrderMutation,
+useGetOrderDetailesQuery,
 
 } = userApi

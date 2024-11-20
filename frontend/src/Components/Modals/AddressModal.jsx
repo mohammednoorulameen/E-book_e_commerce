@@ -414,10 +414,10 @@ const EditAddressModal = ({
 };
 
 /**
- * Add adress
+ * Add address
  */
 const AddAddressModal = ({
-  isOpen,
+  isOpen, 
   onClose,
   loading,
   errorMessages,

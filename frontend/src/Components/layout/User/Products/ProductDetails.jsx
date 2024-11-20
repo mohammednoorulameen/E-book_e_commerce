@@ -10,7 +10,7 @@ import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/outline";
 const ProductDetails = () => {
   const { product_id } = useParams();
   const [product, setProduct] = useState({});
-  const { data } = useGetProductsDetailsQuery(product_id);
+  const { data , refetch} = useGetProductsDetailsQuery(product_id);
   const [AddCart] = useAddCartMutation()
   const [review, setReview] = useState([0]);
   const [rating, Setrating] = useState(0);
@@ -24,6 +24,7 @@ const ProductDetails = () => {
   useEffect(() => {
     if (data && data.productDetails) {
       setProduct(data.productDetails);
+      refetch()
       setReview(data.productDetails.review || []);
       const totalStar = data?.productDetails.review?.reduce(
         (acc, obj) => acc + obj.star,
@@ -46,13 +47,18 @@ const ProductDetails = () => {
  */
 
   const handleAddToCart = async ()=>{
-    const items = {
-      product_id,
-      price : product.price
-    }
-    const response = await AddCart(items)
-    if (response.data) {
-      console.log('response.data.message', response.data.message)
+    if(product.stock == 0){
+      console.log("out of stock")
+    }else{
+      const items = {
+        product_id,
+        price : product.price
+      }
+      
+      const response = await AddCart(items)
+      if (response.data) {
+        console.log('response.data.message', response.data.message)
+      }
     }
   }
 

@@ -152,9 +152,18 @@ export const adminApi = createApi({
       invalidatesTags:['getProducts','getEditProduct']
     }),
 
+    /**
+     * admin orders list
+     */
+
+    OrdersList: builder.query({
+      query:({page,limit})=>`/get-orders-list?page=${page}$limit=${limit}`,
+      providesTags:['getOrdersDetails']
+    })
+
    
 
-
+// ---------------
   }), 
 });
 
@@ -171,5 +180,6 @@ export const {
   useBlockProductMutation,
   useEditProductMutation,
   useGetEitProductQuery,
+  useOrdersListQuery,
 
 } = adminApi;

@@ -76,9 +76,12 @@ const AdminEditProduct = () => {
       author: product?.product?.author || "",
       language: product?.product?.language || "",
       _id: product?.product?._id || "",
-      images: product?.product?.images || [],
+      // images: product?.product?.images || [],
+      ...product?.product,
+    images: product?.product?.images || [],
     },
     validationSchema: validationSchema,
+    
     enableReinitialize: true,
     onSubmit: async (values) => {
       console.log(values);
@@ -134,7 +137,6 @@ const AdminEditProduct = () => {
    */
 
   const handleEditCropComplete = async () => {
-    
     if (completedCrop && imageRef.current) {
       const croppedImageURL = await getCroppedImg(
         imageRef.current,
@@ -151,58 +153,25 @@ const AdminEditProduct = () => {
     }
   };
 
+
+  useEffect(() => {
+    if (product?.product?.images) {
+      setImages(product.product.images);
+    }
+  }, [product]);
+
+
   /**
    * delected image deleting
    */
 
-  // const handleImageDelete = (index) => {
-  //   console.log("check");
-    
-  //   setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  // };
-
-  // const handleImageDelete = (index) => {
-  //   setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  // };
-  
-  // -----------------------------
-
-  // const handleImageDelete = (index, imageToDelete) => {
-  //   // If deleting from the preview images
-  //   console.log("trigger")
-  //   if (imageToDelete === 'preview') {
-  //     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  //     formik.setFieldValue("images", formik.values.images.filter((_, i) => i !== index));
-  //   }
-  //   // If deleting from the originally loaded product images
-  //   else if (imageToDelete === 'product') {
-  //     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-  //     formik.setFieldValue("images", formik.values.images.filter((_, i) => i !== index));
-  //   }
-  // };
-//   const [productImages, setProductImages] = useState(product?.product?.images || []);
-
-// // Handle image deletion
-// const handleImageDelete = (index) => {
-//   // Create a new array by filtering out the image at the given index
-//   const updatedImages = productImages.filter((_, i) => i !== index);
-//   // Update the state with the filtered images
-//   setProductImages(updatedImages);
-// }
-
-const handleImageDelete = (index) => {
-  console.log("check")
-  // Update local state for images
-  const updatedImages = images.filter((_, i) => i !== index);
-  setImages(updatedImages);
-
-  // Update Formik's values
-  formik.setFieldValue('images', updatedImages);
-};
+  const handleImageDelete = (index) => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages); // Update local state
+    formik.setFieldValue('images', updatedImages); // Update Formik's state
+  };
 
   // ---------------------------
-
-
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -396,80 +365,39 @@ const handleImageDelete = (index) => {
                 />
               </ReactCrop>
 
-             <div className="text-center">
-             <button
-             type="button"
-                className="w-1/4 bg-black text-white mt-5 rounded-lg py-3  hover:bg-gray-800 transition-colors"
-                onClick={handleEditCropComplete}
-              >
-                Add
-              </button>
-             </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="w-1/4 bg-black text-white mt-5 rounded-lg py-3  hover:bg-gray-800 transition-colors"
+                  onClick={handleEditCropComplete}
+                >
+                  Add
+                </button>
+              </div>
             </div>
-            
           )}
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            {product?.product?.images.map((image, index) => (
-              <div key={index} className="relative">
-                <img
-                  src={image}
-                  alt={`Product ${index + 1}`}
-                  className="w-full h-32 object-cover rounded"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleImageDelete(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* ------------------------------------------------- */}
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            {/* {images.map((image, index) => (
-              <div key={index} className="relative">
-                <img
-                  src={image}
-                  
-                  alt={`Product ${index + 1}`}
-                  className="w-full h-32 object-cover rounded"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleImageDelete(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))} */}
+          <div className="flex gap-4 mt-4 overflow-x-auto">
             {images && images.length > 0 && (
-  <div className="flex flex-wrap gap-4">
-    {images.map((image, index) => (
-      <div key={index} className="relative">
-        <img
-          src={image}
-          alt={`Product image ${index}`}
-          className="w-32 h-32 object-cover rounded-lg"
-        />
-        <button
-          type="button"
-          onClick={() => handleImageDelete(index)}
-          className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-
+              <div className="flex flex-wrap gap-4">
+                {images.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={image}
+                      alt={`Product image ${index}`}
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleImageDelete(index)}
+                      className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {/* ------------------------------------------------- */}
-
           {formik.touched.image && formik.errors.image && (
             <div className="text-red-600">{formik.errors.image}</div>
           )}
@@ -481,7 +409,6 @@ const handleImageDelete = (index) => {
         >
           Update Product
         </button>
-       
       </form>
     </div>
   );

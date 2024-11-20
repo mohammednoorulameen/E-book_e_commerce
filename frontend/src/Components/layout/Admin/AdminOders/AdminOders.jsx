@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaSearch,
   FaBell,
@@ -8,24 +8,53 @@ import {
   FaTrashAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useGetProductsQuery,useBlockProductMutation } from "../../../../Services/Apis/AdminApi";
+import { useOrdersListQuery } from "../../../../Services/Apis/AdminApi";
 
 const AdminProducts = () => {
   const navigate = useNavigate();
-  const [blockProduct]= useBlockProductMutation()
-  const [activeTab, setActiveTab] = useState("products");
-  // const [searchQuery, setSearchQuery] = useState("");
 
+  const [activeTab, setActiveTab] = useState("products");
+  const [user, setUser] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useGetProductsQuery({
+  const { data, isLoading, isError, refetch } = useOrdersListQuery({
     page: currentPage,
     limit: 10,
   });
+  console.log("data", data);
 
+  const totalPage = data?.totalPage || 1;
+  const orderItems = data?.orderItems;
+
+  // useEffect(() => {
+  //   if (orderItems) {
+  //     const transformedItems = orderItems.map((item) => ({
+  //       id: item.userDetails._id,
+  //       email: item.userDetails.email,
+  //       username: item.userDetails.username,
+  //       status: item.items.orderStatus,
+  //     }));
+  //     setUser(transformedItems);
+  //   }
+  // }, [orderItems]);
+
+  useEffect(() => {
+    if (orderItems) {
+      const uniqueUsers = new Map(); 
   
-  const handleAddProduct = () => {
-    navigate("/admin/addproduct");
-  };
+      orderItems.forEach((order) => {
+        const userId = order.userDetails._id;
+        if (!uniqueUsers.has(userId)) {
+          uniqueUsers.set(userId, {
+            id: userId,
+            email: order.userDetails.email,
+            username: order.userDetails.username,
+            status: order.items.orderStatus,
+          });
+        }
+      });
+      setUser(Array.from(uniqueUsers.values()));
+    }
+  }, [orderItems]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -40,28 +69,8 @@ const AdminProducts = () => {
     return <p>Failed to load products. Please try again later.</p>;
   }
 
-  const { products, totalPage } = data;
-console.log(totalPage);
 
-  /**
-   * admin block & unblock product
-   */
 
-  const handleBlockProduct = async (id) =>{
-    try {
-      await blockProduct({id})
-      refetch()
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  /**
-   * navigate edit page
-   */
-  const handleNavigateEditPage = (product_id)=>{
-    navigate(`/admin/editProduct/${product_id}`)
-  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
@@ -78,28 +87,19 @@ console.log(totalPage);
           >
             Orders
           </button>
-          {/* <button
-            className={`pb-4 px-2 ${
-              activeTab === "categories"
-                ? "border-b-2 border-indigo-600 text-indigo-600"
-                : "text-gray-500"
-            }`}
-            onClick={() => setActiveTab("categories")}
-          >
-            Categories
-          </button> */}
         </div>
 
         {/* Actions */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Orders</h2>
           <div className="flex gap-3">
-
             <div className="relative">
-          <input placeholder="Search..." className=" border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2" />
-          <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          </div>
-           
+              <input
+                placeholder="Search..."
+                className=" border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              />
+              <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
         </div>
 
@@ -109,49 +109,51 @@ console.log(totalPage);
             <thead>
               <tr className="border-b">
                 <th className="text-left py-4 px-6">No</th>
-                <th className="text-left py-4 px-6">Image</th>
-                <th className="text-left py-4 px-6">Product name</th>
-                <th className="text-left py-4 px-6">Author</th>
-                <th className="text-left py-4 px-6">Category</th>
-                <th className="text-left py-4 px-6">Price</th>
-                <th className="text-left py-4 px-6">Stock</th>
-                <th className="text-left py-4 px-6">Status</th>
+                <th className="text-left py-4 px-6">Email</th>
+                <th className="text-left py-4 px-6">Username</th>
+                <th className="text-left py-4 px-6">Staus</th>
+                <th className="text-left py-4 px-6">Detailes</th>
                 <th className="text-left py-4 px-6">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product, index) => (
+              {user.map((userItem, index) => (
                 <tr
-                  key={product._id}
+                  key={userItem.id}
                   className="border-b last:border-b-0 hover:bg-gray-50"
                 >
-                  <td className="py-4 px-6">{(currentPage - 1) * 10 + index + 1}</td>
                   <td className="py-4 px-6">
-                    <img
-                      className="w-10 h-10 object-cover rounded"
-                      src={`${product.images[0]}`}
-                      alt=""
-                    />
+                    {(currentPage - 1) * 10 + index + 1}
                   </td>
-                  <td className="py-4 px-6">{product.productName}</td>
-                  <td className="py-4 px-6">{product.author}</td>
-                  <td className="py-4 px-6">{product.category}</td>
-                  <td className="py-4 px-6">{product.price}</td>
-                  <td className="py-4 px-6">{product.stock}</td>
+                  <td className="py-4 px-6">{userItem.email}</td>
+                  <td className="py-4 px-6">{userItem.username}</td>
                   <td className="py-4 px-6">
-                    <button onClick={()=> handleBlockProduct(product._id)}
+                    <p
                       className={`px-3 py-1 rounded-full text-sm ${
-                        product.status
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                        userItem.status
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-blue-400 text-blue-800"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
                       }`}
                     >
-                      {product.status ? "Active" : "Block"}
+                      {userItem.status
+                        ? "Penting"
+                        : "Shipped"
+                        ? "Cancelled"
+                        : "Delivered"}
+                    </p>
+                  </td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() => navigate( `/admin/ordersdetails/${userItem.id}`)}
+                      className={`px-3 py-1 rounded-full text-sm ${"bg-green-100 text-green-800"}`}
+                    >
+                      Detailes
                     </button>
                   </td>
                   <td className="py-4 px-8">
                     <div className="flex gap-2">
-                     
                       <button className="text-gray-600 hover:text-red-600">
                         <FaTrashAlt className="w-4 h-4" />
                       </button>
@@ -168,7 +170,6 @@ console.log(totalPage);
           totalPages={totalPage}
           onPageChange={handlePageChange}
         />
-        
       </div>
     </div>
   );
@@ -197,4 +198,3 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 };
 
 export default AdminProducts;
- 

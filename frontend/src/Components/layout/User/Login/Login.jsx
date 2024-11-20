@@ -3,9 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
 import * as Yup from "yup";
-import { useLoginMutation } from "../../../../Services/Apis/UserApi";
-import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
-import { auth } from "../../../../Services/firebase/firebaseConfig.js";
+import { useLoginMutation, useGoogleAuthMutation } from "../../../../Services/Apis/UserApi";
+import {  signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../../../../Services/firebase/firebaseConfig.js";
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -19,6 +19,7 @@ const validationSchema = Yup.object().shape({
 const Login = () => {
   const [login, {  isError, isSuccess, error: authError }] =
     useLoginMutation();
+    const [GoogleAuth] = useGoogleAuthMutation()
   const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
@@ -45,29 +46,23 @@ const Login = () => {
    /**
    * HandleGoogleAurhentication
    */
-   const HandleGoogleAurhentication = async (e)=>{
-    const provider = await new GoogleAuthProvider();
-    return signInWithRedirect(auth,provider)
+
+   const HandleGoogleAurhentication = async ()=>{
+    try {
+      const result = signInWithPopup(auth, provider);
+      const user  = result.user;
+      const userToken = user.getIdToken();
+      const response = await GoogleAuth(userToken)
+      if (response?.data?.access_token) {
+        localStorage.setItem('userToken',response.data.access_token);
+        navigate('/')
+      }
+    } catch (error) {
+      console.log(error);
+      
+    }
 
   }
-
-  // useEffect(() => {
-  //   const HandleGoogleAurhentication = async () => {
-  //     try {
-  //       const provider = await new GoogleAuthProvider();
-  //       const result =signInWithRedirect(auth,provider)
-  //       if (result) {
-  //         console.log("User Info:", result.user);
-  //         navigate('/'); // Redirect to dashboard or preferred page
-  //       }
-  //     } catch (error) {
-  //       console.error("Error retrieving redirect result:", error.message);
-  //     }
-  //   };
-
-  //   HandleGoogleAurhentication();
-  // }, [navigate]);
-
   return (
     <div>
       <div className="flex  bg-slate min-h-full flex-1 flex-col justify-center px-6 py-12 pt-20 lg:px-8">
