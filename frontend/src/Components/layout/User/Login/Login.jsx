@@ -49,11 +49,13 @@ const Login = () => {
 
    const HandleGoogleAurhentication = async ()=>{
     try {
-      const result = signInWithPopup(auth, provider);
+      // console.log(check)
+      const result = await signInWithPopup(auth, provider);
       const user  = result.user;
-      const userToken = user.getIdToken();
-      const response = await GoogleAuth(userToken)
-      if (response?.data?.access_token) {
+      const userToken = await user.getIdToken();
+      const response = await GoogleAuth({userToken})
+      console.log('response', response)
+      if (response.data) {
         localStorage.setItem('userToken',response.data.access_token);
         navigate('/')
       }

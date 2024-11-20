@@ -212,6 +212,10 @@ export const userApi = createApi({
         invalidatesTags:["getCartItems","getProductsDetails"]
     }),
 
+    /**
+     * place order
+     */
+
     PlaceOrder: builder.mutation({
         query:(items)=>({
             url:"/user/place-order",
@@ -221,9 +225,26 @@ export const userApi = createApi({
         invalidatesTags:['getCartItems','getOders']
     }),
 
+    /**
+     * get order details
+     */
     getOrderDetailes: builder.query({
         query:({page,limit})=> `/user/get-order-items?page=${page}$limit=${limit}`,
         providesTags:['getOders']
+    }),
+
+    /**
+     * cancel order
+     */
+
+    CancelOrder: builder.mutation({
+        query:({product_id,quantity,order_id})=>({
+            url:"/user/cancel-order",
+            method: 'PUT',
+            body:{product_id,quantity,order_id}
+
+        }),
+        invalidatesTags:['getOders','getProductsDetails','getProducts']
     })
 
 
@@ -251,5 +272,6 @@ useGetCartItemsQuery,
 useDeleteCartItemMutation,
 usePlaceOrderMutation,
 useGetOrderDetailesQuery,
+useCancelOrderMutation,
 
 } = userApi

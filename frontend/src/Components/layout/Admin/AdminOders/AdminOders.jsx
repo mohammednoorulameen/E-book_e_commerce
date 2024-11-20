@@ -20,6 +20,7 @@ const AdminProducts = () => {
     page: currentPage,
     limit: 10,
   });
+  // console.log('currentPage,total', currentPage,total)
   console.log("data", data);
 
   const totalPage = data?.totalPage || 1;
@@ -176,6 +177,8 @@ const AdminProducts = () => {
 };
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null; // Don't render if only one page
+
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
@@ -196,5 +199,28 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     </div>
   );
 };
+
+
+// const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+//   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+//   return (
+//     <div className="flex justify-end mt-4">
+//       {pages.map((page) => (
+//         <button
+//           key={page}
+//           onClick={() => onPageChange(page)}
+//           className={`px-3 py-1 mx-1 border rounded ${
+//             page === currentPage
+//               ? "bg-indigo-600 text-white"
+//               : "hover:bg-gray-100"
+//           }`}
+//         >
+//           {page}
+//         </button>
+//       ))}
+//     </div>
+//   );
+// };
 
 export default AdminProducts;

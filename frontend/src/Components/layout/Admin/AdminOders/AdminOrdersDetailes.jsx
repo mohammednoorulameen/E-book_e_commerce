@@ -22,13 +22,15 @@ const AdminOrdersDetailes = () => {
   const [user, setUser] = useState();
   const orderItems = data?.orderItems;
 
-  console.log("data", data);
-  console.log("user", userId);
+  // console.log("data", data);
+  // console.log("user", userId);
 
   useEffect(() => {
     if (orderItems) {
       orderItems.map((order) => {
         const oderUserId = order.userDetails._id;
+      console.log('orderItems',order.orderItems)
+
         if (userId === oderUserId) {
           const transformedItems =
             (userId,

@@ -166,7 +166,7 @@ const ManageAddress = () => {
                 </Typography>
               }
               action={
-                <IconButton  onClick={()=> {handleDeleteAddressId(address._id),handleOpenDeleteAddressModal()}}  aria-label="delete" color="error">
+                <IconButton  aria-label="delete" color="error">
                   <Delete/>
                 </IconButton>
               }
