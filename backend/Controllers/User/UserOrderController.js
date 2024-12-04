@@ -81,11 +81,11 @@ import crypto from 'crypto'
 
 
 const getOffer = async (product_id) => {
-  console.log("product _id", product_id);
+
 
   try {
     const product = await Products.findById(product_id);
-    console.log("product", product);
+
     if (!product) {
       throw new Error(`Product with ID ${product_id} not found`);
     }
@@ -125,12 +125,7 @@ const getOffer = async (product_id) => {
 
 const PlaceOrder = async (req, res) => {
   const { cartSave,address_id, paymentMethod, totalPrice, couponDiscount } = req.body;
-  const userId = req.userId;
-
-  console.log("cartSave:", cartSave);
-  console.log("paymentMethod:", paymentMethod);
-  console.log("totalPrice:", totalPrice);
-
+  const user_id = req.userId;
   const discountApplied = couponDiscount / cartSave.length;
   const totalAmount = Math.round(totalPrice);
 
@@ -138,47 +133,78 @@ const PlaceOrder = async (req, res) => {
     if (paymentMethod === 'cashOnDelivery') {
       console.log("Processing Cash on Delivery order...");
 
-      let order = await Orders.findOne({ user_id: userId });
-
-      console.log('cartSave', cartSave)
-
-      const itemsWithOffers = await Promise.all(
-        cartSave.map(async (cartItem) => {
-          console.log('cartItem', cartItem)
-          const offerApplied = await getOffer(cartItem.product_id);
-          const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
-          return {
-            product_id: cartItem.product_id,
-            quantity: cartItem.quantity,
-            price: cartItem.price,
-            discount: discountApplied,
-            offer: offerApplied,
-            payableAmount: payableAmount,
-            order_status: "Pending",
-            payment_status: "Pending",
-          };
-        })
-      );
+      let order = await Orders.findOne({ user_id: user_id });
 
       if (order) {
+        const itemsWithOffers = await Promise.all(
+          cartSave.map(async (cartItem) => {
+  
+            const offerApplied = await getOffer(cartItem.product_id);
+            const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
+            return {
+              product_id: cartItem.product_id,
+              quantity: cartItem.quantity,
+              price: cartItem.price,
+              discount: discountApplied,
+              offer: offerApplied,
+              payableAmount: payableAmount,
+              order_status: "Pending",
+              payment_status: "Pending",
+            };
+          })
+        );
+      
         order.items.push(...itemsWithOffers);
         await order.save();
+
       } else {
+        const itemsWithOffers = await Promise.all(
+          cartSave.map(async (cartItem) => {
+  
+            const offerApplied = await getOffer(cartItem.product_id);
+            const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
+            return {
+              product_id: cartItem.product_id,
+              quantity: cartItem.quantity,
+              price: cartItem.price,
+              discount: discountApplied,
+              offer: offerApplied,
+              payableAmount: payableAmount,
+              order_status: "Pending",
+              payment_status: "Pending",
+            };
+          })
+        );
+
+
         order = await Orders.create({
-          user_id: userId,
+          user_id: user_id,
           items: itemsWithOffers,
           address_id
         });
-      }
 
-      // await updateStockAndCart(userId, cartItems);
+
+      }
 
     /**
      * after order placed remove item cart and stock
      */
 
-    
+    await Promise.all(
+      cartSave.map(async (cartItem) => {
+        await Cart.findOneAndUpdate(
+          { user_id: user_id },
+          { $pull: { items: { product_id:cartItem.product_id } } }
+        );
+        // update product stock
+        await Products.findOneAndUpdate(
+          { _id: cartItem.product_id },
+          { $inc: { stock: - cartItem.quantity } }
+        );
+      })
+    );
       res.status(200).json({ message: "Order placed successfully" });
+
     } else if (paymentMethod === 'razorpay') {
       console.log("Processing Razorpay payment...");
 
@@ -188,9 +214,9 @@ const PlaceOrder = async (req, res) => {
         receipt: `receipt_${new Date().getTime()}`,
       };
 
-      const razorpayOrder = await razorpayInstance.orders.create(options);
+      const order = await razorpayInstance.orders.create(options);
 
-      res.status(200).json({ orderId: razorpayOrder.id });
+      res.status(200).json({order});
     }
   } catch (error) {
     console.error("Error in PlaceOrder:", error);
@@ -203,33 +229,26 @@ const PlaceOrder = async (req, res) => {
  * verify payment 
  */
 
-
-
 const VerifyPayment = async (req, res) => {
-  const userId = req.userId;
-        const { payment_id,address_id, order_id, signature, cartSave, couponDiscount } = req.body;
-console.log('address_id', address_id)
-  const secret = process.env.RAZORPAY_KEY_SECRET; 
-  const discountApplied = couponDiscount / cartSave.length;
-
   try {
-    // Generate a signature to verify payment
-    const generatedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(`${order_id}|${payment_id}`)
-      .digest('hex');
+    const user_id = req.userId;
+    console.log('Checking user_id', user_id);
+    const { payment_id, address_id, order_id, signature, cartSave, couponDiscount } = req.body;
+    const secret = process.env.RAZORPAY_KEY_SECRET; 
+    
+    // Calculate the discount for each item (if needed, adjust the logic)
+    const discountApplied = couponDiscount / cartSave.length;
 
-    if (generatedSignature !== signature) {
-      return res.status(400).json({ success: false, message: 'Invalid payment signature' });
-    }
+    // Find the existing order or create a new one
+    let order = await Orders.findOne({ user_id: user_id });
 
-    // Process order after successful payment verification
-    let order = await Orders.findOne({ user_id: userId });
-
+    console.log('Checking order', order);
+    
+   if (order) {
     const itemsWithOffers = await Promise.all(
       cartSave.map(async (cartItem) => {
         const offerApplied = await getOffer(cartItem.product_id);
-        const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
+        const payableAmount = cartItem.price - (((offerApplied + discountApplied) / 100) * cartItem.price);
 
         return {
           product_id: cartItem.product_id,
@@ -237,7 +256,7 @@ console.log('address_id', address_id)
           price: cartItem.price,
           discount: discountApplied,
           offer: offerApplied,
-          payableAmount,
+          payableAmount: payableAmount,
           order_status: "Pending",
           payment_status: "Paid", 
           payment_id: payment_id,
@@ -245,36 +264,59 @@ console.log('address_id', address_id)
       })
     );
 
-    if (order) {
-      // Add new items to existing order
+   
+      console.log('Order found, adding items');
+      // If the order already exists, update it
       order.items.push(...itemsWithOffers);
       await order.save();
     } else {
-      // Create a new order if none exists
+      console.log('Creating new order');
+      // If the order doesn't exist, create a new one
       order = await Orders.create({
-        user_id: userId,
+        user_id: user_id,
         items: itemsWithOffers,
         address_id
-
       });
     }
 
-    // Remove items from cart and update stock
+    // Remove cart items and update product stock
     await Promise.all(
       cartSave.map(async (cartItem) => {
-        // Remove items from the cart
+        console.log("Updating cart and stock for product:", cartItem.product_id);
+        
+        // Remove item from the cart
         await Cart.findOneAndUpdate(
-          { user_id: userId },
-          { $pull: { items: { product_id:cartItem.product_id } } }
+          { user_id: user_id },
+          { $pull: { items: { product_id: cartItem.product_id } } }
         );
 
-        // Update product stock
+        // Decrease stock
         await Products.findOneAndUpdate(
           { _id: cartItem.product_id },
-          { $inc: { stock: - cartItem.quantity } }
+          { $inc: { stock: -cartItem.quantity } }
         );
       })
     );
+
+    // Generate signature to verify payment
+    const generatedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(`${order_id}|${payment_id}`)
+      .digest('hex');
+
+    // Verify payment signature
+    if (generatedSignature !== signature) {
+      return res.status(400).json({ success: false, message: 'Invalid payment signature' });
+    }
+
+    // Update payment status in the order if signature matches
+    if (generatedSignature === signature) {
+      await Orders.updateOne(
+        { user_id: user_id },
+        { $set: { "items.$[items].payment_status": 'paid' } },
+        { arrayFilters: [{ "items.payment_id": payment_id }] }
+      );
+    }
 
     res.status(200).json({ success: true, message: "Payment verified and order placed successfully" });
   } catch (error) {
@@ -282,6 +324,118 @@ console.log('address_id', address_id)
     res.status(500).json({ success: false, message: "Something went wrong", error });
   }
 };
+
+
+
+// const VerifyPayment = async (req, res) => {
+//   try {
+//   const user_id = req.userId;
+//   console.log('chckin geting user_id', user_id)
+//   const { payment_id,address_id, order_id, signature, cartSave, couponDiscount } = req.body;
+//   const secret = process.env.RAZORPAY_KEY_SECRET; 
+//   const discountApplied = couponDiscount / cartSave.length;
+
+//       let order = await Orders.findOne({ user_id: user_id });
+
+//       console.log(' checkin order', order)
+//     if (order) {
+//       const itemsWithOffers = await Promise.all(
+//         cartSave.map(async (cartItem) => {
+//           const offerApplied = await getOffer(cartItem.product_id);
+//           const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
+  
+//           return {
+//             product_id: cartItem.product_id,
+//             quantity: cartItem.quantity,
+//             price: cartItem.price,
+//             discount: discountApplied,
+//             offer: offerApplied,
+//             payableAmount:payableAmount,
+//             order_status: "Pending",
+//             payment_status: "Paid", 
+//             payment_id: payment_id,
+//           };
+//         })
+//       );
+//       console.log('check first order', order)
+//       order.items.push(...itemsWithOffers);
+//       await order.save();
+
+//     } else {
+
+//       const itemsWithOffers = await Promise.all(
+//         cartSave.map(async (cartItem) => {
+//           const offerApplied = await getOffer(cartItem.product_id);
+//           const payableAmount=cartItem.price-(((offerApplied+discountApplied)/100)*cartItem.price)
+  
+//           return {
+//             product_id: cartItem.product_id,
+//             quantity: cartItem.quantity,
+//             price: cartItem.price,
+//             discount: discountApplied,
+//             offer: offerApplied,
+//             payableAmount:payableAmount,
+//             order_status: "Pending",
+//             payment_status: "Paid", 
+//             payment_id: payment_id,
+//           };
+//         })
+//       );
+
+//       order = await Orders.create({
+//         user_id: user_id,
+//         items: itemsWithOffers,
+//         address_id
+
+//       });
+//       console.log('order check cross ', order  )
+//     }
+
+    
+
+//     /**
+//      * remove cart items
+//      * update stock 
+//      */
+
+//     await Promise.all(
+//       cartSave.map(async (cartItem) => {
+//         console.log("check come inside ")
+//         await Cart.findOneAndUpdate(
+//           { user_id: user_id },
+//           { $pull: { items: { product_id:cartItem.product_id } } }
+//         );
+//         await Products.findOneAndUpdate(
+//           { _id: cartItem.product_id },
+//           { $inc: { stock: - cartItem.quantity } }
+//         );
+//       })
+//     );
+
+//       //  Generate a signature to verify payment
+//     const generatedSignature = crypto
+//       .createHmac('sha256', secret)
+//       .update(`${order_id}|${payment_id}`)
+//       .digest('hex');
+
+//     if (generatedSignature !== signature) {
+//       return res.status(400).json({ success: false, message: 'Invalid payment signature' });
+//     }
+
+//     if (generatedSignature === signature) {
+//       await Orders.updateOne(
+//         {user_id: user_id},
+//         { $set: {"items.$[items].payment_status": 'paid'}},
+//         { arrayFilters: [{"items.payment_id": payment_id}]}
+//       )
+//     }
+
+//     res.status(200).json({ success: true, message: "Payment verified and order placed successfully" });
+//   } catch (error) {
+//     console.error("Error in VerifyPayment:", error);
+//     res.status(500).json({ success: false, message: "Something went wrong", error });
+//   }
+// };
 
 
 

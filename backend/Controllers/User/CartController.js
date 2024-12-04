@@ -122,38 +122,35 @@ const GetCartItems = async (req, res) => {
  */
 
 const DeleteCartProduct = async (req, res) => {
-
   const userId = req.userId;
-  const {product_id} = req.body;
+  const { product_id } = req.body;
+  
   try {
-
-    const cart = Cart.findOne({user_id:userId}) 
+    const cart = await Cart.findOne({ user_id: userId });
     if (!cart) {
-      res.status(404).json({ message: "cart cannot find" })
+      return res.status(404).json({ message: "Cart not found" });
     }
+    const productRemove = cart.items.find(item => item.product_id.toString() === product_id);
 
-    // if (!productToRemove) {
-    //   return res.status(404).json({ message: "Product not found in cart" });
-    // }
-
+    if (!productRemove) {
+      return res.status(404).json({ message: "Product not found in cart" });
+    }
     const productPrice = productRemove.price * productRemove.quantity;
-    const newTotalPrice = cart.totalPrice - productPrice
+    const newTotalPrice = cart.totalPrice - productPrice;
 
-    const productRemove = cart.items.find(item => item.product_id.toStriing()=== product_id)
-     cart = await Cart.findOneAndUpdate(
+    await Cart.findOneAndUpdate(
       { user_id: userId },
-      { $pull: { items: { product_id: product_id } },
-        $set: {totalPrice : newTotalPrice}
-    },
-    {new : true}
-      
+      { 
+        $pull: { items: { product_id: product_id } },
+        $set: { totalPrice: newTotalPrice }
+      },
+      { new: true }
     );
-    
-    res.status(200).json({ message: "cart item delete successfully" });
+    res.status(200).json({ message: "Cart item deleted successfully" });
   } catch (error) {
-    console.log("delete failed", error);
-
-    res.status(500).json({ message: "cart item delete failed" });
+    console.log("Delete failed", error);
+    res.status(500).json({ message: "Cart item delete failed" });
   }
 };
+
 export { AddCart, GetCartItems, DeleteCartProduct };

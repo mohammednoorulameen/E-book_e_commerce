@@ -24,7 +24,7 @@ import {
 import UserPrivate from "../Utils/Protector/UserPrivate";
 import ForgotPasswordPage from "../Pages/User/ForgotPasswordPage";
 import CheckOutPage from "../Pages/User/CheckOutPage";
-import NewOrderPaymentPage from "../Pages/User/PaymentsPage";
+import {NewOrderPaymentPage, PaymentSuccessPage} from "../Pages/User/PaymentsPage";
 import { elements } from "chart.js";
 import WhishlistPage from "../Pages/User/WhishlistPage";
 
@@ -152,6 +152,11 @@ const UserRouter = [
       {
         path:"/new-order-payment",
         element: <NewOrderPaymentPage/>
+      },
+
+      {
+        path: "/payment-success",
+        element: <PaymentSuccessPage/>
       },
 
       {

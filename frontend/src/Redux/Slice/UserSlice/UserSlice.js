@@ -4,6 +4,7 @@ const userSlice = createSlice({
     name:'user',
     initialState:{
         userProfile:{
+            user_id:null,
             username:null,
             email:null,
             phone:null
@@ -12,7 +13,8 @@ const userSlice = createSlice({
 
     reducers:{
         setUser:(state,action)=>{
-            const {username,email,phone}=action.payload;
+            const {username,email,phone,_id}=action.payload;
+            state.userProfile.user_id = _id
             state.userProfile.username = username,
             state.userProfile.email = email,
             state.userProfile.phone = phone

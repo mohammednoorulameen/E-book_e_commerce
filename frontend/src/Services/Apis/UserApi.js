@@ -79,7 +79,7 @@ export const userApi = createApi({
      */
 
     getProductsDetails: builder.query({
-        query:(product_id)=>`/user/Products-details?product_id=${product_id}`,
+        query:({product_id,userId})=>`/user/Products-details?product_id=${product_id}&userId=${userId}`,
         providesTags:['getProductsDetails']
       }),
 
@@ -207,7 +207,7 @@ export const userApi = createApi({
         query:({product_id})=>({
             url:"/user/delete-cart-product",
             method:"DELETE",
-            body:product_id
+            body:{product_id}
         }),
         invalidatesTags:["getCartItems","getProductsDetails"]
     }),

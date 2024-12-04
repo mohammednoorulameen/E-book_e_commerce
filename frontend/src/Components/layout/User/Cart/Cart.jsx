@@ -62,6 +62,7 @@ const Cart = () => {
    */
 
   const handleDelete = async (product_id) => {
+ console.log('product_id', product_id)
     const response = await DeleteCartItem({product_id:product_id})    
     if (response.data) {
       console.log("success")

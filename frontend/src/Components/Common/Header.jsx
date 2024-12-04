@@ -397,8 +397,7 @@ console.log("Total items in wishlist:", whishLisitemCount);
           {[
             { label: "HOME", path: "/" },
             { label: "SHOP", path: "/shop" },
-            { label: "CATEGORIES", path: "/categories" },
-            { label: "AUTHORS", path: "/authors" },
+            { label: "ORDERS", path: "/account/orders" },
           ].map((tab) => (
             <Link
               key={tab.label}

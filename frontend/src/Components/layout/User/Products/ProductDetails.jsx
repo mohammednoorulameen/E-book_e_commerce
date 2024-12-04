@@ -1,48 +1,80 @@
 import React, { useEffect, useState } from "react";
-import { useGetProductsDetailsQuery,useAddCartMutation } from "../../../../Services/Apis/UserApi";
+import {
+  useGetProductsDetailsQuery,
+  useAddCartMutation,
+  useAddWhishlistMutation,
+  useRemoveWhishlistProductsMutation,
+  useDeleteCartItemMutation,
+} from "../../../../Services/Apis/UserApi";
 import { useParams } from "react-router-dom";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/outline";
-
+import { HeartIcon as FilledHeartIcon } from "@heroicons/react/solid";
+import { useSelector } from "react-redux";
 
 const ProductDetails = () => {
   const { product_id } = useParams();
   const [product, setProduct] = useState({});
-  const { data , refetch} = useGetProductsDetailsQuery(product_id);
-  const [AddCart] = useAddCartMutation()
+  const { user_id } = useSelector((state) => state?.user?.userProfile || {});
+  const [userId, setuserId] = useState(null);
+  const { data, refetch } = useGetProductsDetailsQuery({
+    product_id: product_id,
+    userId: userId,
+  });
+  const [RemoveWhishlistProducts] = useRemoveWhishlistProductsMutation();
+  const [AddWhishlist] = useAddWhishlistMutation();
+  const [DeleteCartItem] = useDeleteCartItemMutation();
+  const [AddCart] = useAddCartMutation();
+  const [isCart, setIsCart] = useState();
+  const [isWishlist, setIsWhishlist] = useState();
   const [review, setReview] = useState([0]);
   const [rating, Setrating] = useState(0);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  /**
+   * handle add to wishlist
+   */
+  
+  const HandleAddToWhishList = async () => {
+    console.log("product_id", product_id);
+    try {
+      const response = await AddWhishlist({ product_id: product_id });
+      if (response.data) {
+        setIsWhishlist(true); 
+        refetch()
+        console.log("Added to wishlist successfully");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  /**
+   * handle remove wishlist product
+   */
+
+  const HandleRemove = async (product_id) => {
+    try {
+      const response = await RemoveWhishlistProducts({ product_id });
+      if (response.data) {
+        setIsWhishlist(false); 
+        refetch()
+        console.log("Wishlist product removed successfully");
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
 
 
   /**
- * handle add to whishlist
- */
-
-const HandleAddToWhishList = async ()=>{
-  console.log('product_id', product_id)
-  try {
-    const response =await AddWhishlist({product_id:product_id})
-    if (response.data) {
-      console.log('success');
-    }
-  } catch (error) {
-    
-  }
-}
-
-
-/**
- * get product detailes
- */
-
+   * get product details
+   */
   useEffect(() => {
     if (data && data.productDetails) {
       setProduct(data.productDetails);
-      refetch()
       setReview(data.productDetails.review || []);
       const totalStar = data?.productDetails.review?.reduce(
         (acc, obj) => acc + obj.star,
@@ -51,35 +83,58 @@ const HandleAddToWhishList = async ()=>{
       const avgStar = Math.round(totalStar / data.productDetails.review.length);
       Setrating(avgStar);
     }
+
+    if (user_id) {
+      setuserId(user_id);
+    }
+
+    if (data?.isCart) {
+      setIsCart(data.isCart);
+    }
+
+    if (data?.isWishlist) {
+      setIsWhishlist(data.isWishlist);
+    }
   }, [data]);
 
-/**
- * handle image changing
- */
-
+  /**
+   * handle image changing
+   */
   const handleThumbnailClick = (index) => {
     setSelectedImageIndex(index);
   };
-/**
- * handle Add To Cart
- */
 
-  const handleAddToCart = async ()=>{
-    if(product.stock == 0){
-      console.log("out of stock")
-    }else{
+  /**
+   * handle Add To Cart
+   */
+  const handleAddToCart = async () => {
+    if (product.stock === 0) {
+      console.log("out of stock");
+    } else {
       const items = {
         product_id,
-        price : product.price
-      }
-      
-      const response = await AddCart(items)
+        price: product.price,
+      };
+      const response = await AddCart(items);
       if (response.data) {
-        console.log('response.data.message', response.data.message)
+        setIsCart(true);
+        refetch();
+        console.log("response.data.message", response.data.message);
       }
     }
-  }
+  };
 
+  /**
+   * handle delete cart product
+   */
+  const HandleDeleteToCart = async (product_id) => {
+    const response = await DeleteCartItem({ product_id: product_id });
+    if (response.data) {
+      setIsCart(false);
+      refetch();
+      console.log("Product removed from cart");
+    }
+  };
 
   return (
     <section className="py-8 md:py-16 font-primary bg-gray-50">
@@ -161,7 +216,9 @@ const HandleAddToWhishList = async ()=>{
               )}
               <div>
                 {product.stock > 0 ? (
-                  <span className="text-green-500">In stock { product.stock}</span>
+                  <span className="text-green-500">
+                    In stock {product.stock}
+                  </span>
                 ) : (
                   <span className="text-red-500">Out of stock</span>
                 )}
@@ -186,19 +243,45 @@ const HandleAddToWhishList = async ()=>{
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={handleAddToCart}
-                className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition ${
-                  product.stock === 0 && "opacity-50 cursor-not-allowed"
-                }`}
-              >
-                <ShoppingCartIcon className="w-5 h-5" />
-                Add to Cart
-              </button>
+              {isCart ? (
+                <button
+                  onClick={() => HandleDeleteToCart(product._id)}
+                  className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition ${
+                    product.stock === 0 && "opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <ShoppingCartIcon className="w-5 h-5" />
+                  remove to Cart
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition ${
+                    product.stock === 0 && "opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <ShoppingCartIcon className="w-5 h-5" />
+                  Add to Cart
+                </button>
+              )}
 
-              <button onClick={HandleAddToWhishList} className="w-full flex items-center justify-center gap-2 bg-gray-200 py-3 rounded-md hover:bg-gray-300 transition">
-                <HeartIcon className="w-5 h-5 text-red-500" />
-                Add to Wishlist
-              </button>
+              {isWishlist ? (
+                <button
+                  onClick={()=>HandleRemove(product._id)}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-200 py-3 rounded-md hover:bg-gray-300 transition"
+                >
+                  <FilledHeartIcon className="w-5 h-5 text-red-500" />
+                  remove to Wishlist
+                </button>
+              ) : (
+                <button
+                  onClick={HandleAddToWhishList}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-200 py-3 rounded-md hover:bg-gray-300 transition"
+                >
+                  <HeartIcon className="w-5 h-5 text-red-500" />
+                  Add to Wishlist
+                </button>
+              )}
             </div>
           </div>
         </div>

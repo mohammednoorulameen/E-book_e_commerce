@@ -36,7 +36,6 @@ const NewOrderPayment = () => {
   const totalDiscount = totalPrice - cartItems[0]?.totalPrice;
   const coupons = data?.coupons;
 
-  console.log('selectedAddress', selectedAddress)
 
 
   useEffect(() => {
@@ -76,7 +75,6 @@ const NewOrderPayment = () => {
   const handlePaymentChange = (event) => {
     const selectedValue = event.target.value;
     setPaymentMethod(selectedValue);
-    console.log("paymentMethod", selectedValue);
   };
 
 
@@ -112,17 +110,23 @@ const NewOrderPayment = () => {
       couponDiscount,
     });
 
-    if (response?.data) {
+    console.log('response.data', response.data.order)
+    if (response.data) {
+
+      const { id: order_id, amount, currency } = response.data.order 
+
       const options = {
         key: "rzp_test_bzGh9EH7vBB8Yh",
-        amount: response.data.amount * 100,
-        currency: "INR",
-        name: "Your Store Name",
-        description: "Order Payment",
         // image: "https://your-logo-url.com/logo.png",
-        order_id: response.data.orderId,
+        amount,
+        currency,
+        name:"Ebook",
+        description: "Order Payment",
+        order_id,
+
         handler: async (paymentResponse) => {
           // Handle successful payment
+          console.log('check paymentResponse', paymentResponse)
 
           try {
             const verificationResponse = await VerifyPayment({
@@ -130,14 +134,14 @@ const NewOrderPayment = () => {
               order_id: paymentResponse.razorpay_order_id,
               signature: paymentResponse.razorpay_signature,
               cartSave,
-      address_id: selectedAddress._id,
-
+              address_id: selectedAddress._id,
               couponDiscount,
             });
+            
 
             if (verificationResponse?.data?.success) {
               alert("Payment successful and verified!");
-              // navigate("/account/orders");
+              navigate("/payment-success");
             } else {
               alert("Payment verification failed. Please contact support.");
             }
@@ -188,7 +192,7 @@ const NewOrderPayment = () => {
    * checking which payment are selected
    */
 
-  console.log('cartSavecartSavecartSavecartSave', cartSave)
+
   const HandleOrder = () => {
 
     const newCartSave = cartItems.map((cartItem) => ({
@@ -210,7 +214,7 @@ const NewOrderPayment = () => {
         couponDiscount,
       }).then(() => {
         alert("Order placed successfully!");
-        // navigate("/account/orders");
+        navigate("/payment-success");
       });
     }
 

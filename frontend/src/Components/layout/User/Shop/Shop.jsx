@@ -24,7 +24,7 @@ const Shop = () => {
   const { data: category } = useGetCategoryQuery({ page: 1 });
   const [AddWhishlist] = useAddWhishlistMutation();
 
-
+  
   /**
    * handle add to whishlist
    */

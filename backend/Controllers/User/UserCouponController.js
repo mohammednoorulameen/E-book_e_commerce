@@ -9,9 +9,7 @@ import Coupon from "../../Models/CouponModel.js";
 const ActiveCoupons = async (req, res) => {
     try {
       const user_id = req.user_id;
-      console.log("user_id", user_id);
       const coupons = await Coupon.find({ status: true }).sort({ createdAt: -1 });
-  console.log('coupons', coupons)
       const filteredCoupons = coupons.map((coupon) => {
         const user = coupon.users.find((user) => user.user_id?.toString() === user_id?.toString());
         return user
@@ -39,8 +37,7 @@ const ActiveCoupons = async (req, res) => {
       const { couponCode } = req.body;
       const normalizedCouponCode = couponCode.toUpperCase();
   
-      console.log("User ID:", user_id);
-      console.log("Coupon Code:", normalizedCouponCode);
+
   
       // Find the coupon
       const coupon = await Coupon.findOne({ couponCode: normalizedCouponCode });
