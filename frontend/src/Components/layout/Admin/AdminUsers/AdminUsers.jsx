@@ -20,6 +20,7 @@ const UsersList = () => {
   });
   const [blockUser] = useBlockuserMutation();
 
+  console.log('data', data)
   /**
    * handle change page and take total page
    */

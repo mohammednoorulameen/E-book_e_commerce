@@ -17,6 +17,24 @@ const ProductDetails = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
 
+
+  /**
+ * handle add to whishlist
+ */
+
+const HandleAddToWhishList = async ()=>{
+  console.log('product_id', product_id)
+  try {
+    const response =await AddWhishlist({product_id:product_id})
+    if (response.data) {
+      console.log('success');
+    }
+  } catch (error) {
+    
+  }
+}
+
+
 /**
  * get product detailes
  */
@@ -177,7 +195,7 @@ const ProductDetails = () => {
                 Add to Cart
               </button>
 
-              <button className="w-full flex items-center justify-center gap-2 bg-gray-200 py-3 rounded-md hover:bg-gray-300 transition">
+              <button onClick={HandleAddToWhishList} className="w-full flex items-center justify-center gap-2 bg-gray-200 py-3 rounded-md hover:bg-gray-300 transition">
                 <HeartIcon className="w-5 h-5 text-red-500" />
                 Add to Wishlist
               </button>

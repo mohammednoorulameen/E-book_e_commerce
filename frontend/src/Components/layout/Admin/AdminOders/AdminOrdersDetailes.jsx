@@ -6,81 +6,97 @@ import {
   CardActions,
   MenuItem,
   Select,
-  InputLabel,
   FormControl,
-  FormHelperText,
   Typography,
 } from "@mui/material";
 import { CalendarToday, LocationOn, LocalShipping } from "@mui/icons-material";
-import { useOrdersListQuery } from "../../../../Services/Apis/AdminApi";
-import { useParams } from "react-router-dom";
+import {
+  useOrdersListQuery,
+  useChangeOrderStatusMutation,
+} from "../../../../Services/Apis/AdminApi";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const AdminOrdersDetailes = () => {
+const AdminOrdersDetails = () => {
   const { userId } = useParams();
-  const { data, isLoading, isError, refetch } = useOrdersListQuery({});
-  const [user, setUser] = useState();
-  const orderItems = data?.orderItems;
-
-  // console.log("data", data);
-  // console.log("user", userId);
+  const [orderActions, setOrderActions] = useState({});
+  const navigate = useNavigate()
+  const { data, isLoading, isError, refetch } = useOrdersListQuery({
+    limit: 10,
+  });
+  const [changeOrderStatus] = useChangeOrderStatusMutation();
+  const [userOrders, setUserOrders] = useState([]);
 
   useEffect(() => {
-    if (orderItems) {
-      orderItems.map((order) => {
-        const oderUserId = order.userDetails._id;
-      console.log('orderItems',order.orderItems)
-
-        if (userId === oderUserId) {
-          const transformedItems =
-            (userId,
-            {
-              id: userId,
-              email: order.userDetails.email,
-              username: order.userDetails.username,
-              status: order.items.orderStatus,
-              quantity: order.items.quantity,
-              price: order.items.price,
-              orderId: order.items._id,
-              productName : order.productDetails.productName,
-              productImage : order.productDetails.images[0]  || "https://via.placeholder.com/100", 
-            });
-          setUser(transformedItems);
-        }
-      });
+    if (data?.orderItems) {
+      const filteredOrders = data.orderItems.filter(
+        (order) => order.user_id._id === userId
+      );
+      const transformedOrders = filteredOrders.map((order) => ({
+        email: order.user_id.email,
+        username: order.user_id.username,
+        orderDate: new Date(order.items[0]?.itemCreatedAt).toLocaleDateString(),
+        items: order.items.map((item) => ({
+          productName: item.product_id.productName,
+          productImage:
+            item.product_id.images[0] || "https://via.placeholder.com/100",
+          quantity: item.quantity,
+          price: item.price,
+          orderStatus: item.orderStatus,
+          orderId: item._id,
+        })),
+        address: `${order.address_id?.address || "N/A"}, ${
+          order.address_id?.city || "N/A"
+        }, ${order.address_id?.state || "N/A"}, ${
+          order.address_id?.locality || "N/A"
+        }, ${order.address_id?.pincode || "N/A"}, ${
+          order.address_id?.landmark || "N/A"
+        }`,
+      }));
+      setUserOrders(transformedOrders);
     }
-  }, [orderItems]);
+  }, [data, userId]);
 
-  console.log("user", user);
+  const handleChangeStatus = async (orderId, action) => {
+    try {
+      const response = await changeOrderStatus({
+        user_id: userId,
+        order_id: orderId,
+        action,
+      });
+      if (response.data) {
+        navigate('/admin/orders')
+        console.log("Order status changed successfully");
+        refetch();
+      }
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+    }
+  };
+
+  if (isLoading) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (isError) {
+    return <Typography>Error loading orders</Typography>;
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 mt-7">
-      {user && (
-        <Card sx={{ maxWidth: 1200, mx: "auto" }}>
+      {userOrders.map((order, index) => (
+        <Card sx={{ maxWidth: 1200, mx: "auto", mb: 4 }} key={index}>
           <CardHeader
-            action={
-              <div className="flex items-center gap-4">
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select defaultValue="pending" label="Status">
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="processing">Processing</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button variant="contained">Save</Button>
-              </div>
-            }
             title={
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <CalendarToday fontSize="small" />
                   <span className="text-sm text-muted-foreground">
-                    Wed, Aug 13, 2022, 4:34PM
+                    {order.orderDate}
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Order ID: {user.orderId}
+                  Order ID: {order.items[0]?.orderId}
                 </div>
               </div>
             }
@@ -90,13 +106,12 @@ const AdminOrdersDetailes = () => {
               <div className="space-y-4">
                 <Typography variant="h6">Customer</Typography>
                 <div>
-                  <div className="font-medium">{user.username}</div>
+                  <div className="font-medium">{order.username}</div>
                   <div className="text-sm text-muted-foreground">
-                    {user.email}{" "}
+                    {order.email}
                   </div>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <Typography variant="h6">Order Info</Typography>
                 <div className="space-y-2">
@@ -108,19 +123,17 @@ const AdminOrdersDetailes = () => {
                   <div>Payment Status: Paid</div>
                 </div>
               </div>
+
               <div className="space-y-4">
                 <Typography variant="h6">Deliver to</Typography>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <LocationOn fontSize="small" color="disabled" />
-                    <span>City: sdfas, sdfasq</span>
-                  </div>
-                  <div>asdxc,</div>
-                  <div>Po Box</div>
+                <div className="flex items-center gap-2">
+                  <LocationOn fontSize="small" color="disabled" />
+                  <span>{order.address}</span>
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border">
+
+            <div className="rounded-lg border mt-4">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
@@ -128,32 +141,77 @@ const AdminOrdersDetailes = () => {
                     <th className="px-4 py-3 text-right">Unit Price</th>
                     <th className="px-4 py-3 text-right">Quantity</th>
                     <th className="px-4 py-3 text-right">Total</th>
+                    <th className="px-4 py-3 text-right">Status</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  <tr>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-4">
-                        <img
-                          alt="Product image"
-                          className="h-16 w-16 rounded-lg border object-cover"
-                          src={user.productImage}
-                        />
+                  {order.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-4">
+                          <img
+                            alt="Product"
+                            className="h-16 w-16 rounded-lg border object-cover"
+                            src={item.productImage}
+                          />
+                          <span>{item.productName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">{item.price}</td>
+                      <td className="px-4 py-3 text-right">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right">
+                        {item.price * item.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <FormControl fullWidth>
+                          <Select
+                            defaultValue={"Pending"}
+                            className="rounded-full "
+                            value={
+                              orderActions[item.orderId] || item.orderStatus
+                            }
+                            onChange={(e) =>
+                              setOrderActions({
+                                ...orderActions,
+                                [item.orderId]: e.target.value,
+                              })
+                            }
+                          >
 
-              <span>{user.productName}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right">{user.price}</td>
-                    <td className="px-4 py-3 text-right">{user.quantity}</td>
-                    <td className="px-4 py-3 text-right">{user.price}</td>
-                  </tr>
+                            <MenuItem
+                              className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-blue-200 !text-green-800"
+                              value="Pending"
+                            >
+                              Pending
+                            </MenuItem>
+                            <MenuItem
+                              className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-blue-300 !text-green-800"
+                            value="Shipped">Shipped</MenuItem>
+                            <MenuItem
+                              className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-green-200 !text-green-800"
+                            value="Delivered">Delivered</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ mt: 1 }}
+                          onClick={() =>
+                            handleChangeStatus(
+                              item.orderId,
+                              orderActions[item.orderId] || item.orderStatus
+                            )
+                          }
+                        >
+                          Save
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          </CardContent>
-
-          <CardActions sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <CardActions sx={{ display: "flex", justifyContent: "flex-end" }}>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Typography variant="body2" className="font-medium">
@@ -190,15 +248,17 @@ const AdminOrdersDetailes = () => {
                     color: "orange.600",
                   }}
                 >
-                  {user.status}
+                  {order.orderStatus}
                 </Typography>
               </div>
             </div>
           </CardActions>
+          </CardContent>
+          
         </Card>
-      )}
+      ))}
     </div>
   );
 };
 
-export default AdminOrdersDetailes;
+export default AdminOrdersDetails;

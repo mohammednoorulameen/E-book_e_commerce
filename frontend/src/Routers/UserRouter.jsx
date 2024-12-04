@@ -16,12 +16,17 @@ import {
   ChangePasswordPage,
   ManageAddressPage,
   OrderHistoryPage,
-  SettingsPage
+  SettingsPage,
+  WalletPage,
+  ReferralsPage,
+  NotificationsPage
 } from "../Pages/User/AccountPage";
 import UserPrivate from "../Utils/Protector/UserPrivate";
 import ForgotPasswordPage from "../Pages/User/ForgotPasswordPage";
 import CheckOutPage from "../Pages/User/CheckOutPage";
 import NewOrderPaymentPage from "../Pages/User/PaymentsPage";
+import { elements } from "chart.js";
+import WhishlistPage from "../Pages/User/WhishlistPage";
 
 
 const UserRouter = [
@@ -112,14 +117,18 @@ const UserRouter = [
             path: "orders",
             element: <OrderHistoryPage />,
           },
-          // {
-          //   path:'Wallet',
-          //   element: < Wallet/>
-          // },
-          // {
-          //   path:'referals',
-          //   element: < Referals/>
-          // },
+          {
+            path:'wallet',
+            element: < WalletPage/>
+          },
+          {
+            path:'referrals',
+            element: < ReferralsPage/>
+          },
+          {
+            path:'notifications',
+            element: <NotificationsPage/>
+          },
            {
             path:'settings',
             element: < SettingsPage/>
@@ -144,6 +153,11 @@ const UserRouter = [
         path:"/new-order-payment",
         element: <NewOrderPaymentPage/>
       },
+
+      {
+        path: "/whishlist",
+        element : <WhishlistPage/>
+      }
 
     ],
   },

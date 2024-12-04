@@ -69,7 +69,7 @@ export const userApi = createApi({
      */
 
     getProducts: builder.query({
-        query:({page,limit})=>`/user/list-Products?page=${page}$limit=${limit}`,
+        query:({page,limit,category,sort})=>`/user/list-Products?page=${page}$limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
         providesTags:['getProducts']
       }),
 
@@ -204,14 +204,14 @@ export const userApi = createApi({
      */
 
     DeleteCartItem: builder.mutation({
-        query:(product_id)=>({
+        query:({product_id})=>({
             url:"/user/delete-cart-product",
             method:"DELETE",
             body:product_id
         }),
         invalidatesTags:["getCartItems","getProductsDetails"]
     }),
-
+ 
     /**
      * place order
      */
@@ -245,6 +245,73 @@ export const userApi = createApi({
 
         }),
         invalidatesTags:['getOders','getProductsDetails','getProducts']
+    }),
+
+    /**
+     * get active coupon 
+     */
+
+    ActiveCoupons: builder.query({
+       query:()=> '/user/active-coupons',
+       providesTags:['getActiveCoupons']
+    }),
+
+    /**
+     * user apply coupon
+     */
+
+    ApplyCoupon : builder.mutation({
+        query:(form)=>({
+            url: "/user/apply-coupon",
+            method: 'PUT',
+            body: form
+        })
+    }),
+
+    /**
+     * verify payment 
+     */
+
+    VerifyPayment : builder.mutation({
+        query:(items)=>({
+            url: "/user/verify-payment",
+            method: 'POST',
+            body: items
+        })
+    }),
+
+    /**
+     * add whishlist 
+     */
+
+    AddWhishlist: builder.mutation({
+       query:({product_id})=>({
+        url: "/user/add-whishlist",
+        method: 'POST',
+        body: { product_id }
+       }),
+       invalidatesTags:['getWhishList']
+    }),
+    
+    /**
+     * get whishlist 
+     */
+
+    GetWhishlist: builder.query({
+        query:()=> '/user/get-whishlist',
+        providesTags:['getWhishList']
+    }),
+
+    /**
+     * remove whishlist products
+     */
+
+    RemoveWhishlistProducts: builder.mutation({
+        query:({product_id}) =>({
+            url: '/user/delete-whishlist-products',
+            method: 'DELETE',
+            body: {product_id}
+        })
     })
 
 
@@ -273,5 +340,11 @@ useDeleteCartItemMutation,
 usePlaceOrderMutation,
 useGetOrderDetailesQuery,
 useCancelOrderMutation,
+useActiveCouponsQuery,
+useApplyCouponMutation,
+useVerifyPaymentMutation,
+useAddWhishlistMutation,
+useGetWhishlistQuery,
+useRemoveWhishlistProductsMutation,
 
 } = userApi

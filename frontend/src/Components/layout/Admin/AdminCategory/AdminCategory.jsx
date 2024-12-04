@@ -18,51 +18,49 @@ import {
 
 const validationSchema = Yup.object().shape({
   category: Yup.string()
-    .max(20, "character limit") 
-    // .matches(/^\S*$/, "Category name cannot contain spaces")
+    .max(20, "character limit")
+    // .matches(/^\S*$/,)
     .required("category is required"),
   description: Yup.string()
     .max(30, "character limit")
-    // .matches(/^\S*$/, "description name cannot contain spaces")
+    // .matches(/^\S*$/)
     .required("description is required"),
 });
 
 const ProductManagement = () => {
   const [activeTab, setActiveTab] = useState("products");
   const [categoryList, SetCategoryList] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [ currentPage, setCurrentPage ] = useState(1)
-  const [addCategory, { isSuccess,isError }] = useAddCategoryMutation();
-  const {data,refetch, isLoading, iserror } = useGetCategoryQuery({
-    page:currentPage,
-    limit:10
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [addCategory, { isSuccess, isError }] = useAddCategoryMutation();
+  const { data, refetch, isLoading, iserror } = useGetCategoryQuery({
+    page: currentPage,
+    limit: 10,
   });
-  const [blockCategory, ] =  useBlockCategoryMutation();
-  const [EditCategory, ] = useEditCategoryMutation()
+  const [blockCategory] = useBlockCategoryMutation();
+  const [EditCategory] = useEditCategoryMutation();
 
-  
   /**
    *  handle change page and take totalPage
    */
   const handlePageChange = (page) => {
-    setCurrentPage(page)
-    
-  }
-  const totalPage = data?.totalPage 
+    setCurrentPage(page);
+  };
+  const totalPage = data?.totalPage;
 
   /*
   Edit category
   */
 
-  const handleEditCategory = (id)=>{
-    const CategoryToEdit = categoryList.find((caregory)=> caregory._id === id)
-    setSelectedCategory(CategoryToEdit)
+  const handleEditCategory = (id) => {
+    const CategoryToEdit = categoryList.find((caregory) => caregory._id === id);
+    setSelectedCategory(CategoryToEdit);
     // setIsEditing(true);
     formik.setValues({
       category: CategoryToEdit.category,
-      description: CategoryToEdit.description
-    })
-  }
+      description: CategoryToEdit.description,
+    });
+  };
 
   /*
   getting the category list
@@ -84,27 +82,26 @@ const ProductManagement = () => {
     },
 
     validationSchema: validationSchema,
-onSubmit: async (categoryData, { resetForm }) => {
-  const response = selectedCategory ? await EditCategory({ ...categoryData, id: selectedCategory._id })
-    : await addCategory(categoryData);
-  if (response?.data) {
-    resetForm();
-    refetch(); // Refetch
-    setSelectedCategory(null)
-
-
-  }
-}
+    onSubmit: async (categoryData, { resetForm }) => {
+      const response = selectedCategory
+        ? await EditCategory({ ...categoryData, id: selectedCategory._id })
+        : await addCategory(categoryData);
+      if (response?.data) {
+        resetForm();
+        refetch(); // Refetch
+        setSelectedCategory(null);
+      }
+    },
   });
 
-  const  handlecategoryblock = async (id) =>{
+  const handlecategoryblock = async (id) => {
     try {
-      await blockCategory({id})
-      refetch()
+      await blockCategory({ id });
+      refetch();
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -138,8 +135,12 @@ onSubmit: async (categoryData, { resetForm }) => {
         <form onSubmit={formik.handleSubmit}>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Categories</h2>
-            {isSuccess && <h4 className="text-green-500">Category successfully addedd </h4> }
-            {isError && <h4 className="text-red-500">Category already exist</h4> }
+            {isSuccess && (
+              <h4 className="text-green-500">Category successfully addedd </h4>
+            )}
+            {isError && (
+              <h4 className="text-red-500">Category already exist</h4>
+            )}
             <div className="flex gap-3">
               <div className="flex flex-col">
                 {formik.touched.category && formik.errors.category && (
@@ -147,7 +148,7 @@ onSubmit: async (categoryData, { resetForm }) => {
                     {formik.errors.category}
                   </div>
                 )}
-                
+
                 <input
                   id="category"
                   name="category"
@@ -178,11 +179,11 @@ onSubmit: async (categoryData, { resetForm }) => {
                 />
               </div>
               <button
-               type="submit"
-               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-             >
-               { selectedCategory ? "Update category" : " Add new category" }
-               </button>
+                type="submit"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+              >
+                {selectedCategory ? "Update category" : " Add new category"}
+              </button>
             </div>
           </div>
         </form>
@@ -200,77 +201,85 @@ onSubmit: async (categoryData, { resetForm }) => {
               </tr>
             </thead>
             <tbody>
-              { categoryList.length > 0 ? (
-              categoryList.map((caregory,index) => (
-                <tr
-                  key={caregory._id}
-                  className="border-b last:border-b-0 hover:bg-gray-50"
-                >
-                  <td className="py-4 px-6">{(currentPage - 1) * 10 + index + 1}</td>
-                  <td className="py-4 px-6">{caregory.category}</td>
-                  <td className="py-4 px-6">{caregory.description}</td>
-                  <td className="py-4 px-6">
-                  <button onClick={()=>handlecategoryblock(caregory._id)} className={`px-3 py-1 rounded-full text-sm ${
-                      caregory.status 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {caregory.status ? "Active":"block"}
-                    </button>
-                  </td>
-                  <td className="py-4 px-9">
-                    <div className="flex gap-2">
-                      <button onClick={()=> handleEditCategory(caregory._id)} className="text-gray-600 hover:text-indigo-600">
-                        <FaPencilAlt className="w-4 h-4" />
+              {categoryList.length > 0 ? (
+                categoryList.map((caregory, index) => (
+                  <tr
+                    key={caregory._id}
+                    className="border-b last:border-b-0 hover:bg-gray-50"
+                  >
+                    <td className="py-4 px-6">
+                      {(currentPage - 1) * 10 + index + 1}
+                    </td>
+                    <td className="py-4 px-6">{caregory.category}</td>
+                    <td className="py-4 px-6">{caregory.description}</td>
+                    <td className="py-4 px-6">
+                      <button
+                        onClick={() => handlecategoryblock(caregory._id)}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          caregory.status
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {caregory.status ? "Active" : "block"}
                       </button>
-                      {/* <button className="text-gray-600 hover:text-red-600">
+                    </td>
+                    <td className="py-4 px-9">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditCategory(caregory._id)}
+                          className="text-gray-600 hover:text-indigo-600"
+                        >
+                          <FaPencilAlt className="w-4 h-4" />
+                        </button>
+                        {/* <button className="text-gray-600 hover:text-red-600">
                         <FaTrashAlt className="w-4 h-4" />
                       </button> */}
-                    </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="text-red-400">
+                    {Error && "category not found"}
                   </td>
                 </tr>
-              ))
-            ):(
-              <tr>
-                <td className="text-red-400">{Error && "category not found"}</td> 
-              </tr>
-            )}
+              )}
             </tbody>
           </table>
         </div>
 
         <Pagination
-        currentPage = {currentPage}
-        totalPage = {totalPage} 
-        onPageChannge = {handlePageChange}
+          currentPage={currentPage}
+          totalPage={totalPage}
+          onPageChannge={handlePageChange}
         />
       </div>
     </div>
   );
 };
 
-
-const Pagination = ({currentPage, totalPage, onPageChannge}) =>{
-  const pages = Array.from({ length : totalPage}, (_,i)=> i + 1);
+const Pagination = ({ currentPage, totalPage, onPageChannge }) => {
+  const pages = Array.from({ length: totalPage }, (_, i) => i + 1);
 
   return (
     <div className="flex justify-end mt-4">
-      {pages.map((page)=>(
-        <button 
-        key={page}
-        onClick={()=> onPageChannge(page)}
-        className={`px-3 py-1 mx-1 border rounded ${
-          page === currentPage
-            ? "bg-indigo-600 text-white"
-            : "hover:bg-gray-100"
-        }`}
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChannge(page)}
+          className={`px-3 py-1 mx-1 border rounded ${
+            page === currentPage
+              ? "bg-indigo-600 text-white"
+              : "hover:bg-gray-100"
+          }`}
         >
           {page}
         </button>
       ))}
-
     </div>
-  )
-}
+  );
+};
 
 export default ProductManagement;

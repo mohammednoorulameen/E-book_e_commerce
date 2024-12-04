@@ -3,22 +3,41 @@ import {
   useGetAddressesQuery,
   useGetCartItemsQuery,
   usePlaceOrderMutation,
+  useActiveCouponsQuery,
+  useApplyCouponMutation,
+  useVerifyPaymentMutation,
 } from "../../../../Services/Apis/UserApi";
 import { Tag, Truck, Wallet } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NewOrderPayment = () => {
-  const { data: cart } = useGetCartItemsQuery();
-  const { data: addressesData, refetch } = useGetAddressesQuery(); 
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const cartSaveAddress = location.state?.address_id || [];
-  const [PlaceOrder,{isSuccess}] =  usePlaceOrderMutation();
   const [cartItems, setCartItems] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  // const [cartSave, setCartSave] = useState([])
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [couponDiscount, setCouponDiscount] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [cartSave, setCartSave] = useState([]);
+  const { data: cart } = useGetCartItemsQuery();
+  const { data: addressesData } = useGetAddressesQuery();
+  const [PlaceOrder, { isSuccess }] = usePlaceOrderMutation();
+  const { data, refetch } = useActiveCouponsQuery();
+  const [ApplyCoupon] = useApplyCouponMutation();
+  const [VerifyPayment] = useVerifyPaymentMutation();
+
+  const totalPrice =
+    cartItems[0]?.totalPrice -
+    (couponDiscount / 100) * cartItems[0]?.totalPrice;
+  const totalDiscount = totalPrice - cartItems[0]?.totalPrice;
+  const coupons = data?.coupons;
+
+  console.log('selectedAddress', selectedAddress)
+
 
   useEffect(() => {
     if (addressesData?.addresses) {
@@ -27,7 +46,9 @@ const NewOrderPayment = () => {
       );
       setSelectedAddress(selected || null);
     }
+
     if (cart) {
+
       const transformedItems = cart.cartItems.map((cartItem) => ({
         id: cartItem.productDetailes._id,
         name: cartItem.productDetailes.productName,
@@ -38,37 +59,186 @@ const NewOrderPayment = () => {
       }));
       setCartItems(transformedItems);
     }
-  }, [addressesData, cart]);
+  }, [addressesData,cartSaveAddress, cart]);
+
+
+
 
   // Calculate the total price of the cart
   const calculateTotalPrice = () => {
     return cartItems.reduce((acc, item) => item.totalPrice, 0);
   };
 
+  /**
+   * handle HandleOrder
+   */
+
   const handlePaymentChange = (event) => {
-    setPaymentMethod(event.target.value);
+    const selectedValue = event.target.value;
+    setPaymentMethod(selectedValue);
+    console.log("paymentMethod", selectedValue);
+  };
+
+
+  /**
+   * set the datas cart save
+   */
+
+  // const handleCartSave = () => {
+  //   const newCartSave = cartItems.map((cartItem) => ({
+  //     address_id: selectedAddress,
+  //       product_id: cartItem.id,
+  //       quantity : cartItem.quantity,
+  //       price :   cartItem.price,
+  //   }));
+  //   setCartSave(newCartSave)
+  // };
+  
+  /**
+   * call to razorpay script
+   */
+
+  const handleRazorpayPayment = async () => {
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      alert("Failed to load Razorpay SDK. Please try again.");
+      return;
+    }
+    const response = await PlaceOrder({
+      cartSave,
+      address_id: selectedAddress._id,
+      paymentMethod: "razorpay",
+      totalPrice,
+      couponDiscount,
+    });
+
+    if (response?.data) {
+      const options = {
+        key: "rzp_test_bzGh9EH7vBB8Yh",
+        amount: response.data.amount * 100,
+        currency: "INR",
+        name: "Your Store Name",
+        description: "Order Payment",
+        // image: "https://your-logo-url.com/logo.png",
+        order_id: response.data.orderId,
+        handler: async (paymentResponse) => {
+          // Handle successful payment
+
+          try {
+            const verificationResponse = await VerifyPayment({
+              payment_id: paymentResponse.razorpay_payment_id,
+              order_id: paymentResponse.razorpay_order_id,
+              signature: paymentResponse.razorpay_signature,
+              cartSave,
+      address_id: selectedAddress._id,
+
+              couponDiscount,
+            });
+
+            if (verificationResponse?.data?.success) {
+              alert("Payment successful and verified!");
+              // navigate("/account/orders");
+            } else {
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (error) {
+            console.error("Error during payment verification:", error);
+            alert("An error occurred while verifying the payment.");
+          }
+          console.log(paymentResponse);
+          alert("Payment successful!");
+          // navigate("/account/orders");
+        },
+
+        prefill: {
+          name: selectedAddress?.name,
+          email: "customer@example.com",
+          contact: selectedAddress?.phone,
+        },
+        notes: {
+          address: `${selectedAddress?.address}, ${selectedAddress?.locality}`,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } else {
+      alert("Failed to initialize payment. Please try again.");
+    }
   };
 
   /**
-   * handlle HandleOrder
+   * load to razorpay
    */
-  
 
-  const HandleOrder =async () =>{
-    const newCartSave = cartItems.map((item) => ({
-      address_id: selectedAddress._id,
-      product_id: item.id,
-      quantity: item.quantity,
-      price: item.price,
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  /**
+   * checking which payment are selected
+   */
+
+  console.log('cartSavecartSavecartSavecartSave', cartSave)
+  const HandleOrder = () => {
+
+    const newCartSave = cartItems.map((cartItem) => ({
+        product_id: cartItem.id,
+        quantity : cartItem.quantity,
+        price :   cartItem.price,
     }));
-        // setCartSave(newCartSave)
-    const response = await PlaceOrder(newCartSave)
-    if (response.data) {
-      alert("Order placed successfully!");
-      navigate('/shop')
+    setCartSave(newCartSave)
+  
+    if (paymentMethod === "razorpay") {
+      console.log("paymentMethod", paymentMethod);
+      handleRazorpayPayment();
+    } else if (paymentMethod === "cod") {
+      PlaceOrder({
+        cartSave:newCartSave,
+        address_id: selectedAddress._id,
+        paymentMethod: "cashOnDelivery",
+        totalPrice,
+        couponDiscount,
+      }).then(() => {
+        alert("Order placed successfully!");
+        // navigate("/account/orders");
+      });
     }
-  }
 
+   
+  };
+
+
+
+
+
+  /**
+   * apply coupon
+   */
+
+  const handleApplyCoupon = async (couponCode) => {
+    if (appliedCoupon === couponCode) {
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+    } else {
+      const response = await ApplyCoupon({ couponCode });
+      if (response.data) {
+        setAppliedCoupon(couponCode);
+        setCouponDiscount(response.data.coupon.offer);
+        console.log("Coupon applied successfully");
+        refetch();
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,7 +287,12 @@ const NewOrderPayment = () => {
                 className="space-y-2"
               >
                 <div className="flex items-center space-x-2 border rounded-lg p-3 bg-blue-50">
-                  <Radio value="razorpay" id="razorpay" className="mr-2" />
+                  <Radio
+                    value="razorpay"
+                    name="razorpay"
+                    id="razorpay"
+                    className="mr-2"
+                  />
                   <label htmlFor="razorpay" className="flex-1 text-sm">
                     Razor Pay
                   </label>
@@ -151,10 +326,16 @@ const NewOrderPayment = () => {
           {/* Coupon Card */}
           <Card className="mb-4">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
+              <motion.div
+                className="flex items-center gap-2 mb-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
                 <Tag className="h-5 w-5" />
                 <h2 className="font-semibold text-sm">Apply Coupon</h2>
-              </div>
+              </motion.div>
+
               <Button
                 className="w-full text-white"
                 sx={{
@@ -163,9 +344,57 @@ const NewOrderPayment = () => {
                   color: "#fff",
                 }}
                 size="large"
+                onClick={() => setIsExpanded((prev) => !prev)}
               >
-                Apply Coupon
+                {isExpanded ? "Hide Coupons" : "Apply Coupon"}
               </Button>
+
+              {/* AnimatePresence to handle open and close animations */}
+
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    className="mt-4"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    {coupons.map((coupon) => (
+                      <motion.div
+                        key={coupon._id}
+                        className="flex justify-between items-center border-b pb-2 mb-2"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ delay: 0.1 * coupon.id }}
+                      >
+                        <div>
+                          <h4 className="font-medium text-sm">
+                            {coupon.couponCode}
+                          </h4>
+                          <p className="text-xs text-gray-600">
+                            {coupon.offer}% offer, {coupon.description}
+                          </p>
+                        </div>
+
+                        <button
+                          className={`text-sm px-4 py-2 rounded ${
+                            appliedCoupon === coupon.couponCode
+                              ? "bg-gray-500 text-white hover:bg-gray-600"
+                              : "bg-black text-white hover:bg-gray-800"
+                          }`}
+                          onClick={() => handleApplyCoupon(coupon.couponCode)}
+                        >
+                          {appliedCoupon === coupon.couponCode
+                            ? "Cancel"
+                            : "Apply"}
+                        </button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
 
@@ -187,9 +416,20 @@ const NewOrderPayment = () => {
                 <div className="border-t pt-3 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>₹{calculateTotalPrice()}.00</span>
+                    <span className={`${appliedCoupon ? "line-through" : ""}`}>
+                      ₹{calculateTotalPrice()}.00
+                    </span>
                   </div>
 
+                  <div className="flex justify-between text-sm">
+                    <span>Coupon</span>
+
+                    {appliedCoupon ? (
+                      <span>₹{totalPrice}.00</span>
+                    ) : (
+                      <span>₹0.00</span>
+                    )}
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
                     <span>₹0.00</span>
@@ -200,18 +440,21 @@ const NewOrderPayment = () => {
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Total Discount</span>
-                    <span>-₹0.00</span>
+                    <span>-₹{totalDiscount}.00</span>
                   </div>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between font-semibold text-sm">
                     <span>Total</span>
-                    <span>₹{calculateTotalPrice()}.00</span>
+                    <span>
+                      ₹{appliedCoupon ? totalPrice : calculateTotalPrice()}.00
+                    </span>
+                    {/* <span>₹{calculateTotalPrice()}.00</span> */}
                   </div>
                 </div>
 
                 <Button
-                onClick={HandleOrder}
+                  onClick={ HandleOrder}
                   className="w-full text-white"
                   sx={{
                     backgroundColor: "#000",

@@ -1,20 +1,20 @@
-
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, Box } from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, Box, Collapse } from "@mui/material";
 import { Button, Typography } from "@mui/material";
+import { v4 as uuidv4 } from "uuid";
 import {
   useGetOrderDetailesQuery,
   useCancelOrderMutation,
 } from "../../../../Services/Apis/UserApi";
-import { OrderCancelModal } from '../../../Modals/OrderCancelModal'
+import { OrderCancelModal , OrderReturnModal} from "../../../Modals/OrderModal";
 
 const OrderHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [orders, setOrders] = useState([]);
-  const navigate = useNavigate();
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [isOrderCancelModalOpen, setisOrderCancelModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null); 
+  const [isOrderReturnModalOpen, setisOrderReturnModalOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [OderData, setOderData] = useState([]);
   const [CancelOrder] = useCancelOrderMutation();
   const { data, refetch } = useGetOrderDetailesQuery({
     page: currentPage,
@@ -22,10 +22,32 @@ const OrderHistory = () => {
   });
 
   const totalPage = data?.totalPage || 1;
-console.log('data', data)
+
   useEffect(() => {
     if (data?.orderItems) {
-      setOrders(data.orderItems);
+      const oderdata = data.orderItems.flatMap((order) =>
+        order.items.map((item) => ({
+          orderId: order._id,
+          orderDate: new Date(
+            order.items[0]?.itemCreatedAt
+          ).toLocaleDateString(),
+          totalItems: order.items.length,
+          status: order.items[0]?.orderStatus || "N/A",
+          address: `${order.address_id?.address || "N/A"}, ${
+            order.address_id?.city || "N/A"
+          }, ${order.address_id?.state || "N/A"}, ${
+            order.address_id?.locality || "N/A"
+          }, ${order.address_id?.pincode || "N/A"}, ${
+            order.address_id?.landmark || "N/A"
+          }`,
+          productId: item.product_id?._id,
+          productName: item.product_id?.productName || "N/A",
+          category: item.product_id?.category || "N/A",
+          quantity: item.quantity,
+        }))
+      );
+      console.log("oderdata", oderdata);
+      setOderData(oderdata);
     }
   }, [data]);
 
@@ -34,12 +56,16 @@ console.log('data', data)
     refetch();
   };
 
-  const handleViewDetails = (product_id) => {
-    navigate(`/productdetails/${product_id}`);
+  const handleViewDetails = (orderId) => {
+    setExpandedOrderId((prev) => (prev === orderId ? null : orderId));
   };
 
+  /**
+   *  handle cancel modal
+   */
+
   const handleOrderCancelOpenModal = (order) => {
-    setSelectedOrder(order); // Pass order details to modal
+    setSelectedOrder(order);
     setisOrderCancelModalOpen(true);
   };
 
@@ -52,72 +78,139 @@ console.log('data', data)
     if (!selectedOrder) return;
 
     const { product_id, quantity, order_id } = selectedOrder;
-
     const response = await CancelOrder({
       product_id,
       quantity,
       order_id,
     });
-
+    console.log("response", response);
     if (response.data) {
-      console.log(response.data.message);
       refetch();
-      handleOrderCancelCloseModal(); // Close modal after successful cancellation
+      handleOrderCancelCloseModal();
     }
   };
+
+  /**
+   * return modal 
+   */
+
+  const handleOrderReturnOpenModal = () =>{
+    setisOrderReturnModalOpen(true)
+  }
+
+  const handleOrderReturnCancelModal = () =>{
+    setisOrderReturnModalOpen(false)
+  }
+
+  const handleSubmitOrderreturn = (value) =>{
+    console.log('value', value)
+        // if (input.trim == "") {
+        //   setError(true)
+        // }else{
+        //   setError(false)
+        //   console.log("Form submitted successfull");
+          
+        // }
+  }
 
   return (
     <div>
       <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-gray-900">Order History</h2>
         <div className="space-y-4">
-          {orders.length > 0 ? (
-            orders.map((item) => (
-              <Card key={item._id || item.productDetails._id}>
-                <CardHeader>
-                  <Typography>Order #{item._id}</Typography>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-black">
-                    Placed on: {item.productDetails.productName}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Placed on: {new Date().toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Total: ₹{item.items.price}.00
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Status: {item.items.orderStatus}
-                  </p>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Button
-                      onClick={() => handleViewDetails(item.productDetails._id)}
-                      variant="outlined"
+          {OderData.length > 0 ? (
+            OderData.map((OrderData) => {
+              const isExpanded = expandedOrderId === OrderData.orderId;
+
+              return (
+                <Card key={`${OrderData.productId}-${OrderData.orderId}`}>
+                  <CardHeader
+                    title={`Order #${uuidv4()}`}
+                    subheader={`Placed on: ${OrderData.orderDate}`}
+                  />
+                  <CardContent>
+                    <Typography variant="body2" color="textSecondary">
+                      Total Items = {OrderData.totalItems}
+                    </Typography>
+                    <Typography 
+                              className={`!px-3 !py-1 !m-2 w-1/6 !hover:bg-blue-500 !rounded-full !text-sm ${
+                                OrderData.status == 'Penting' ? 
+                                "!bg-blue-300 !text-green-800" :
+                                OrderData.status == 'Shipped' ?
+                                "!bg-blue-400 !text-green-800":
+                                OrderData.status == 'Delivered'?
+                                "!bg-green-200 !text-green-800": ""
+                              }`}
+                    variant="body2" color="textSecondary">
+                      Status = {OrderData.status}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Address: {OrderData.address}
+                    </Typography>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
                     >
-                      View Details
-                    </Button>
-                    <Button
-                      onClick={() =>
-                        handleOrderCancelOpenModal({
-                          order_id: item.items._id,
-                          product_id: item.productDetails?._id,
-                          quantity: item.items.quantity,
-                        })
-                      }
-                      variant="outlined"
-                      color="error"
-                    >
-                      Cancel
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))
+                      <Button
+                        onClick={() => handleViewDetails(OrderData.orderId)}
+                        variant="outlined"
+                      >
+                        {isExpanded ? "Hide Details" : "View Details"}
+                      </Button>
+                      {OrderData.status !== "Cancelled" &&  OrderData.status !== "Delivered"  ? (
+                        <Button
+                          onClick={() =>
+                            handleOrderCancelOpenModal({
+                              order_id: OrderData.orderId,
+                              product_id: OrderData.productId,
+                              quantity: OrderData.quantity,
+                            })
+                          }
+                          variant="outlined"
+                          color="error"
+                        >
+                          Cancel
+                        </Button>
+                      ):(
+                        <Button
+                        onClick={() =>
+                          handleOrderReturnOpenModal({ })
+                        }
+                        variant="outlined"
+                        color="return"
+                      >
+                        Return
+                      </Button>
+                      )}
+                    </Box>
+
+                    {/* Collapse for additional details */}
+                    <Collapse in={isExpanded}>
+                      <Box mt={2}>
+                        <Box
+                          key={`${OrderData.productId}-${OrderData.orderId}`}
+                          mb={2}
+                        >
+                          <Typography variant="body2" color="textSecondary">
+                            Product ID: {OrderData.productId}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            Product Name: {OrderData.productName}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            Category: {OrderData.category}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            Quantity: {OrderData.quantity}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Collapse>
+                  </CardContent>
+                </Card>
+              );
+            })
           ) : (
             <p>No orders found</p>
           )}
@@ -134,169 +227,19 @@ console.log('data', data)
           isOpen={isOrderCancelModalOpen}
           onClose={handleOrderCancelCloseModal}
           onSubmit={handleCancelOrder}
+          // error = {error}
         />
       )}
+
+    <OrderReturnModal 
+    isOpen={isOrderReturnModalOpen}
+    onClose={handleOrderReturnCancelModal}
+    onSubmit={handleSubmitOrderreturn}
+    />
+
     </div>
   );
 };
-
-
-
-
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import { Card, CardContent, CardHeader, Box } from "@mui/material";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import { Button, Typography } from "@mui/material";
-// import {
-//   useGetOrderDetailesQuery,
-//   useCancelOrderMutation,
-// } from "../../../../Services/Apis/UserApi";
-// import { OrderCancelModal } from '../../../Modals/OrderCancelModal'
-
-// const OrderHistory = () => {
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [orders, setOrders] = useState([]);
-//   const navigate = useNavigate();
-//   const [isOrderCancelModalOpen, setisOrderCancelModalOpen] = useState(false);
-//   const [CancelOrder] = useCancelOrderMutation(); 
-//   const { data, refetch } = useGetOrderDetailesQuery({
-//     page: currentPage,
-//     limit: 5,
-//   });
-
-//   const totalPage = data?.totalPage || 1;
-
-//   /**
-//    * Set order items
-//    */
-
-//   useEffect(() => {
-//     if (data?.orderItems) {
-//       setOrders(data.orderItems);
-//     }
-//   }, [data]);
-
-//   console.log("orders", orders);
-
-//   /**
-//    * Handle page change
-//    */
-//   const handlePageChange = (page) => {
-//     setCurrentPage(page);
-//     refetch();
-//   };
-
-//   /**
-//    * handle view product
-//    */
-
-//   const handleViewDetails = (product_id) => {
-//     navigate(`/productdetails/${product_id}`);
-//   };
-
-
-//   const handleOrderCancelOpenModal = () => {
-//     setisOrderCancelModalOpen(true);
-//   };
-
-//   const handleOrderCancelcloseModal = () => {
-//     setisOrderCancelModalOpen(false);
-//   };
-
-//   /**
-//    * handle cancel oder
-//    */
-
-//   const handleCancelOrder = async ({ product_id, quantity, order_id }) => {
-//     const response = await CancelOrder({
-//       product_id: product_id,
-//       quantity: quantity,
-//       order_id: order_id,
-//     });
-//     refetch();
-//     if (response.data) {
-//       console.log(response.data.message);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <div className="space-y-6">
-//         <h2 className="text-2xl font-semibold text-gray-900">Order History</h2>
-//         <div className="space-y-4">
-//           {orders.length > 0 ? (
-//             orders.map((item) => (
-//               <Card key={item._id || item.productDetails._id}>
-//                 <CardHeader>
-//                   <Typography>Order #{item._id}</Typography>
-//                   {/* <Typography>Order #{item._id.toString().padStart(5, '0')}</Typography> */}
-//                 </CardHeader>
-//                 <CardContent>
-//                   <p className="text-sm text-black">
-//                     Placed on: {item.productDetails.productName}
-//                   </p>
-//                   <p className="text-sm text-gray-500">
-//                     Placed on: {new Date().toLocaleDateString()}
-//                   </p>
-//                   <p className="text-sm text-gray-500">
-//                     Total: ₹{item.items.price}.00
-//                   </p>
-//                   <p className="text-sm text-gray-500 ">
-//                     Status: {item.items.orderStatus}
-//                   </p>
-//                   <Box
-//                     display="flex"
-//                     justifyContent="space-between"
-//                     alignItems="center"
-//                   >
-//                     <Button
-//                       onClick={() => handleViewDetails(item.productDetails._id)}
-//                       variant="outlined"
-//                     >
-//                       View Details
-//                     </Button>
-//                     {/* Add the Cancel button */}
-//                     <Button
-//                       onClick={() =>{handleOrderCancelOpenModal(),
-//                         handleCancelOrder({
-//                           order_id: item._id,
-//                           product_id: item.productDetails?._id,
-//                           quantity: item.items.quantity,
-//                         })}
-//                       }
-//                       variant="outlined"
-//                       color="error"
-//                     >
-//                       Cancel
-//                     </Button>
-//                   </Box>
-//                   {/* <Button onClick={()=> handleviewDetailes(item.productDetails._id)}  className="mt-4" variant="outlined">View Details</Button> */}
-//                 </CardContent>
-//               </Card>
-//             ))
-//           ) : (
-//             <p>No orders found</p>
-//           )}
-
-//           <Pagination
-//             currentPage={currentPage}
-//             totalPages={totalPage}
-//             onPageChange={handlePageChange}
-//           />
-//         </div>
-//       </div>
-//       <OrderCancelModal 
-//       isOpen={isOrderCancelModalOpen}
-//       onClose={handleOrderCancelcloseModal}
-//       onSubmit={handleCancelOrder}
-//       />
-//     </div>
-//   );
-// };
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -320,4 +263,4 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
- export default OrderHistory;
+export default OrderHistory;

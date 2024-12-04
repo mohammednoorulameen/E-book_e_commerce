@@ -25,31 +25,21 @@ const AdminProducts = () => {
 
   const totalPage = data?.totalPage || 1;
   const orderItems = data?.orderItems;
-
-  // useEffect(() => {
-  //   if (orderItems) {
-  //     const transformedItems = orderItems.map((item) => ({
-  //       id: item.userDetails._id,
-  //       email: item.userDetails.email,
-  //       username: item.userDetails.username,
-  //       status: item.items.orderStatus,
-  //     }));
-  //     setUser(transformedItems);
-  //   }
-  // }, [orderItems]);
-
+console.log('orderItems', orderItems)
   useEffect(() => {
     if (orderItems) {
       const uniqueUsers = new Map(); 
   
       orderItems.forEach((order) => {
-        const userId = order.userDetails._id;
+        const userId = order.user_id._id;
         if (!uniqueUsers.has(userId)) {
           uniqueUsers.set(userId, {
             id: userId,
-            email: order.userDetails.email,
-            username: order.userDetails.username,
-            status: order.items.orderStatus,
+            email: order.user_id.email,
+            username: order.user_id.username,
+            phone: order.user_id.phone,
+            status: order.items[0]?.orderStatus || "N/A",
+            orderDate: new Date(order.items[0]?.itemCreatedAt).toLocaleDateString(),
           });
         }
       });
@@ -112,7 +102,8 @@ const AdminProducts = () => {
                 <th className="text-left py-4 px-6">No</th>
                 <th className="text-left py-4 px-6">Email</th>
                 <th className="text-left py-4 px-6">Username</th>
-                <th className="text-left py-4 px-6">Staus</th>
+                <th className="text-left py-4 px-6">Mobile</th>
+                <th className="text-left py-4 px-6">Order Date</th>
                 <th className="text-left py-4 px-6">Detailes</th>
                 <th className="text-left py-4 px-6">Actions</th>
               </tr>
@@ -128,23 +119,8 @@ const AdminProducts = () => {
                   </td>
                   <td className="py-4 px-6">{userItem.email}</td>
                   <td className="py-4 px-6">{userItem.username}</td>
-                  <td className="py-4 px-6">
-                    <p
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        userItem.status
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-blue-400 text-blue-800"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {userItem.status
-                        ? "Penting"
-                        : "Shipped"
-                        ? "Cancelled"
-                        : "Delivered"}
-                    </p>
-                  </td>
+                  <td className="py-4 px-6">{userItem.phone}</td>
+                  <td className="py-4 px-6">{userItem.orderDate}</td>
                   <td className="py-4 px-6">
                     <button
                       onClick={() => navigate( `/admin/ordersdetails/${userItem.id}`)}

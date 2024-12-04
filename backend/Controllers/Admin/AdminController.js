@@ -6,36 +6,31 @@ import { AccessToken, RefreshToken } from "../../Utils/Tokens.js";
 const maxage = 7 * 24 * 60 * 60 * 1000;
 import mongoose from "mongoose";
 import Category from "../../Models/CategoryModel.js";
+import Orders from '../../Models/OrderModel.js'
+import jwt from "jsonwebtoken";
 
 /*
 controll referesh token
 */
 
-const refreshingToken = (req, res) => {
-  const cookies = req.cookies.adminJwt;
-  if (!cookies) {
+const RefreshingToken = async (req, res) => {
+  const refreshToken = req.cookies.adminJwt;
+  if (!refreshToken) {
     return res.status(401).json({ message: "Unatherized" });
   }
-
-  const refreshingToken = cookies;
-  jwt.verify(refreshingToken, process.env.REFRESH_TOKEN, async (err, user) => {
-    try {
-      if (err) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      if (!user.isAdmin) {
-        return res.status(403).json({ message: "You are not allowed" });
-      }
-      const userData = await User.findById(user.id);
-      if (!userData) {
-        return res.status(404).json({ message: "user not found" });
-      }
-      const access_token = AccessToken({ id: userData._id, isAdmin: true }); // generate access token
-      res.status(200).json({ access_token }); // send  access token
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" }); // send  access token
+  try {
+    const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN);
+    const admin = await User.findById(decode.userId);
+    console.log("admin", admin);
+    if (!admin) {
+      return res.status(404).json({ message: "user not found" });
     }
-  });
+    const access_token = AccessToken(admin._id);
+    res.json({ access_token });
+  } catch (error) {
+    console.log("server error", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 /*
@@ -57,7 +52,7 @@ const AdminLogin = async (req, res) => {
   if (!adminData.isActive) {
     return res.status(403).json({ message: "Sorry, you are blocked" });
   }
-  console.log('adminData', adminData)
+  console.log("adminData", adminData);
   if (adminData.role == "admin") {
     const access_token = AccessToken({ id: adminData._id, isAdmin: true }); // generate access token
     const refresh_token = RefreshToken({ id: adminData._id, isAdmin: true }); // generatew refresh token
@@ -71,6 +66,22 @@ const AdminLogin = async (req, res) => {
     res.status(200).json({ message: "Login successfully", access_token }); // send  access token
   } else {
     return res.status(403).json({ message: "Sorry, you are not allowed" });
+  }
+};
+
+/**
+ * get admin profile
+ */
+
+const adminProfile = async (req, res) => {
+  try {
+    const admin = await User.find({ isAdmin: true });
+    if (!admin) {
+      return res.status(401).json({ message: "admin not found" });
+    }
+    res.status(200).json({ message: "get admin profile successfully ", admin });
+  } catch (error) {
+    res.status(400).json({ message: "get admin profile failed " });
   }
 };
 
@@ -89,15 +100,13 @@ const UserList = async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalPage = Math.ceil(totalUsers / limit);
     const currentPage = page;
-    res
-      .status(200)
-      .json({
-        message: "get user success",
-        usersList,
-        totalUsers,
-        totalPage,
-        currentPage,
-      });
+    res.status(200).json({
+      message: "get user success",
+      usersList,
+      totalUsers,
+      totalPage,
+      currentPage,
+    });
   } catch (error) {
     console.log(error, "userlist");
     res.status(500).json({ message: "Failed to get users" });
@@ -250,13 +259,323 @@ const EditCategory = async (req, res) => {
   }
 };
 
+/**
+ * admin salse report
+ */
+
+
+// const GetSalesReport = async (req, res) => {
+//   try {
+//     let { sortBy, startDate, endDate } = req.query;
+
+//     console.log(' startDate, endDate ',  startDate, endDate);
+    
+//     // Validate custom date inputs
+//     if (startDate && isNaN(new Date(startDate))) {
+//       return res.status(400).json({ message: "Invalid startDate format" });
+//     }
+//     if (endDate && isNaN(new Date(endDate))) {
+//       return res.status(400).json({ message: "Invalid endDate format" });
+//     }
+
+//     // Initialize sort criteria
+//     let filter = {}; // Use this for matching
+//     switch (sortBy) {
+//       case "date":
+//         filter = {
+//           "items.itemCreatedAt": {
+//             $gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+//           },
+//         };
+//         break;
+//       case "month":
+//         filter = {
+//           "items.itemCreatedAt": {
+//             $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+//           },
+//         };
+//         break;
+//       case "year":
+//         filter = {
+//           "items.itemCreatedAt": {
+//             $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+//           },
+//         };
+//         break;
+//       case "customDate":
+//         if (startDate && endDate) {
+//           filter = {
+//             "items.itemCreatedAt": {
+//               $gte: new Date(startDate),
+//               $lte: new Date(endDate),
+//             },
+//           };
+//         }
+//         break;
+//       default:
+//         filter = {};
+//         break;
+//     }
+
+//     // Query the sales report
+//     const salesReport = await Orders.aggregate([
+//       { $unwind: "$items" },
+//       { $match: filter }, // Apply the filter to match documents
+//       {
+//         $lookup: {
+//           from: "products",
+//           localField: "items.product_id",
+//           foreignField: "_id",
+//           as: "productDetails",
+//         },
+//       },
+//       { $unwind: "$productDetails" },
+//       { 
+//         $sort: { "items.createdAt": -1 } // Apply sorting by createdAt in descending order
+//       },
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "user_id",
+//           foreignField: "_id",
+//           as: "userDetails",
+//         },
+//       },
+//       { $unwind: "$userDetails" },
+//       {
+//         $project: {
+//           _id: 0,
+//           "items.quantity": 1,
+//           "items.price": 1,
+//           "items.payment_id": 1,
+//           "items.payment_status": 1,
+//           "items.discount": 1,
+//           "items.offer": 1,
+//           "items.payableAmount": 1,
+//           "items.itemCreatedAt": 1,
+//           "items.order_status": 1,
+//           "items._id": 1,
+//           "productDetails._id": 1,
+//           "productDetails.productName": 1,
+//           "userDetails.firstName": 1,
+//           "userDetails.email": 1,
+//           "userDetails._id": 1,
+//         },
+//       },
+//     ]);
+
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 10;
+//     const skip = (page - 1) * limit;
+//     const categoryData = await Category.find().skip(skip).limit(limit);
+//     const totalCategory = await Order.countDocuments();
+//     const totalPage = Math.ceil(totalCategory / limit);
+//     const currentPage = page;
+
+//     res.status(200).json({
+//       message: "Sales report fetched successfully",
+//       salesReport,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching sales report:", error);
+//     res.status(500).json({
+//       message: "Sales report failed, internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+const GetSalesReport = async (req, res) => {
+  try {
+    let { sortBy, startDate, endDate, page = 1, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    console.log("startDate, endDate", startDate, endDate);
+
+    // Validate custom date inputs
+    if (startDate && isNaN(new Date(startDate))) {
+      return res.status(400).json({ message: "Invalid startDate format" });
+    }
+    if (endDate && isNaN(new Date(endDate))) {
+      return res.status(400).json({ message: "Invalid endDate format" });
+    }
+
+    // Initialize sort criteria
+    let filter = {}; // Use this for matching
+    switch (sortBy) {
+      case "date":
+        filter = {
+          "items.itemCreatedAt": {
+            $gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          },
+        };
+        break;
+      case "month":
+        filter = {
+          "items.itemCreatedAt": {
+            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          },
+        };
+        break;
+      case "year":
+        filter = {
+          "items.itemCreatedAt": {
+            $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+          },
+        };
+        break;
+      case "customDate":
+        if (startDate && endDate) {
+          filter = {
+            "items.itemCreatedAt": {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            },
+          };
+        }
+        break;
+      default:
+        filter = {};
+        break;
+    }
+
+    const salesReport = await Orders.aggregate([
+            { $unwind: "$items" },
+            { $match: filter }, // Apply the filter to match documents
+            {
+              $lookup: {
+                from: "products",
+                localField: "items.product_id",
+                foreignField: "_id",
+                as: "productDetails",
+              },
+            },
+            { $unwind: "$productDetails" },
+            { 
+              $sort: { "items.createdAt": -1 } // Apply sorting by createdAt in descending order
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "user_id",
+                foreignField: "_id",
+                as: "userDetails",
+              },
+            },
+            { $unwind: "$userDetails" },
+            {
+              $project: {
+                _id: 0,
+                "items.quantity": 1,
+                "items.price": 1,
+                "items.payment_id": 1,
+                "items.payment_status": 1,
+                "items.discount": 1,
+                "items.offer": 1,
+                "items.payableAmount": 1,
+                "items.itemCreatedAt": 1,
+                "items.order_status": 1,
+                "items._id": 1,
+                "productDetails._id": 1,
+                "productDetails.productName": 1,
+                "userDetails.firstName": 1,
+                "userDetails.email": 1,
+                "userDetails._id": 1,
+              },
+            },
+          ]);
+
+    // Count total documents for pagination
+    const totalDocuments = await Orders.aggregate([
+      { $unwind: "$items" },
+      { $match: filter },
+    ]).count("count");
+
+    const totalSalesReports = totalDocuments[0]?.count || 0;
+
+    const salesReportPagination = await Orders.aggregate([
+      { $unwind: "$items" },
+      { $match: filter }, // Apply the filter to match documents
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      { 
+        $sort: { "items.createdAt": -1 }, // Apply sorting by createdAt in descending order
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $project: {
+          _id: 0,
+          "items.quantity": 1,
+          "items.price": 1,
+          "items.payment_id": 1,
+          "items.payment_status": 1,
+          "items.discount": 1,
+          "items.offer": 1,
+          "items.payableAmount": 1,
+          "items.itemCreatedAt": 1,
+          "items.order_status": 1,
+          "items._id": 1,
+          "productDetails._id": 1,
+          "productDetails.productName": 1,
+          "userDetails.firstName": 1,
+          "userDetails.email": 1,
+          "userDetails._id": 1,
+        },
+      },
+      { $skip: (page - 1) * limit }, // Skip based on current page
+      { $limit: limit }, // Limit the number of results
+    ]);
+// --------------------
+    const totalPage = Math.ceil(totalSalesReports / limit);
+
+    res.status(200).json({
+      message: "Sales report fetched successfully",
+      salesReport,
+      salesReportPagination,
+      pagination: {
+        totalSalesReports,
+        totalPage,
+        currentPage: page,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching sales report:", error);
+    res.status(500).json({
+      message: "Sales report failed, internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
 export {
+  RefreshingToken,
   AdminLogin,
+  adminProfile,
   UserList,
-  refreshingToken,
   BlockUser,
   AddCategory,
   getCategory,
   BlockCategory,
   EditCategory,
+  GetSalesReport,
 };

@@ -7,6 +7,7 @@ import { AccessToken, RefreshToken } from "../../Utils/Tokens.js";
 import { HashPassword } from "../../Utils/HashPassword.js";
 import { GenerateOtp } from "../../Utils/GenerateOtp.js";
 import Address from "../../Models/AddressModal.js";
+import firebaseAdmin from "../../Config/firebaseAdmin.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
@@ -227,6 +228,51 @@ const Login = async (req, res) => {
   }
 };
 
+ /**
+  * google authentication
+  */
+const GoogleLogin = async (req,res)=>{
+
+  try {
+    const { userToken } = req.body;
+
+    if (!userToken) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(userToken);
+    const { name, email, uid } = decodedToken;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        username: name,
+        email,
+        phone: req.body.phone || '',
+        firebaseUid: uid,
+        isActive: true,
+        isVerified: true,
+      });
+    }
+
+    const access_token = AccessToken(user._id);
+    return res.status(200).json({
+      message: "Login successful",
+      access_token,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        phone : user.phone,
+      },
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+ }
+
+
 /**
  * get user profile
  */
@@ -394,6 +440,7 @@ export {
   VerifyOtp,
   ResendOtp,
   Login,
+  GoogleLogin,
   RefreshingToken,
   UserProfile,
   Logout,

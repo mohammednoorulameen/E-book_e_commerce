@@ -74,17 +74,6 @@ const AddProduct = () => {
       console.log(values);
 
       try {
-        // const formData = new FormData();
-        // formData.append("productName", values.productName);
-        // formData.append("price", values.price);
-        // formData.append("stock", values.stock);
-        // formData.append("category", values.category);
-        // formData.append("description", values.description);
-        // formData.append("publisher", values.publisher);
-        // formData.append("author", values.author);
-        // formData.append("language", values.language);
-        // values.images.forEach((file) => formData.append("images", file));
-
         if (images.length < 3) {
           setImagerr(true);
           return;
@@ -120,21 +109,7 @@ const AddProduct = () => {
   /**
    * image upload
    */
-  // const handleImageUpload = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     // formik.setFieldValue('image', [...formik.v alues.image, file]);
-  //     setCurrentImage(URL.createObjectURL(file));
-  //     setCrop(
-  //       centerCrop(
-  //         makeAspectCrop(
-  //           { width: 80, aspect: 4 / 3 },
-  //           imageRef.current.width / imageRef.current.height
-  //         )
-  //       )
-  //     );
-  //   }
-  // };
+  
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

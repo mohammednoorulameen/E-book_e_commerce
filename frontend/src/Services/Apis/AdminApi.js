@@ -2,7 +2,7 @@ import { baseQueryWithReauth } from "../ConnectApi/AdminConnectApi.js";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
 export const adminApi = createApi({
-  reducerPath: 'adminApi',
+  reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     /*
@@ -21,7 +21,7 @@ export const adminApi = createApi({
     */
     adminrefreshtoken: builder.query({
       query: () => ({
-        url: "/refresh",
+        url: "/refresh-token",
         transformResponse: (response) => response.access_token,
       }),
     }),
@@ -30,8 +30,8 @@ export const adminApi = createApi({
     get user list
     */
     getUserList: builder.query({
-      query: ({page,limit}) => `/adminuserslist?page=${page}$limit=${limit}`,
-      providesTags: ['getUsersLists'],
+      query: ({ page, limit }) => `/adminuserslist?page=${page}$limit=${limit}`,
+      providesTags: ["getUsersLists"],
     }),
 
     /*
@@ -43,29 +43,30 @@ export const adminApi = createApi({
         method: "POST",
         body: { id },
       }),
-      invalidatesTags:['getUsersLists']
+      invalidatesTags: ["getUsersLists"],
     }),
 
     /*
     add category
     */
 
-  addCategory: builder.mutation({
-    query: (form)=>({
-      url:"/adminaddcategory",
-      method: "POST",
-      body: form
+    addCategory: builder.mutation({
+      query: (form) => ({
+        url: "/adminaddcategory",
+        method: "POST",
+        body: form,
+      }),
+      invalidatesTags: ["getCategory"],
     }),
-    invalidatesTags:['getCategory']
-  }),
 
-   /*
+    /*
     get category
     */
 
     getCategory: builder.query({
-      query: ({page,limit})=> `/admingetcategory?page=${page}$limit=${limit}`,
-      providesTags: ['getCategory']
+      query: ({ page, limit }) =>
+        `/admingetcategory?page=${page}$limit=${limit}`,
+      providesTags: ["getCategory"],
     }),
 
     /*
@@ -73,12 +74,12 @@ export const adminApi = createApi({
     */
 
     blockCategory: builder.mutation({
-      query: ({id})=>({
+      query: ({ id }) => ({
         url: "/adminblockcategory",
         method: "POST",
-        body: {id}
+        body: { id },
       }),
-    invalidatesTags:['getCategory']
+      invalidatesTags: ["getCategory"],
     }),
 
     /**
@@ -86,25 +87,25 @@ export const adminApi = createApi({
      */
 
     EditCategory: builder.mutation({
-      query : (form)=>({
+      query: (form) => ({
         url: "/admineditcategory",
         method: "PUT",
-        body: form
+        body: form,
       }),
-    invalidatesTags:['getCategory']
+      invalidatesTags: ["getCategory"],
     }),
-    
+
     /**
      * add product
      */
 
     addProduct: builder.mutation({
-      query: (form)=>({
-        url:"/adminadd-product",
+      query: (form) => ({
+        url: "/adminadd-product",
         method: "POST",
-        body: form
+        body: form,
       }),
-      invalidatesTags:['getProducts']
+      invalidatesTags: ["getProducts"],
     }),
 
     /**
@@ -113,8 +114,9 @@ export const adminApi = createApi({
      */
 
     getProducts: builder.query({
-      query:({page,limit})=>`/adminlist-Products?page=${page}$limit=${limit}`,
-      providesTags:['getProducts']
+      query: ({ page, limit }) =>
+        `/adminlist-Products?page=${page}$limit=${limit}`,
+      providesTags: ["getProducts"],
     }),
 
     /**
@@ -127,29 +129,29 @@ export const adminApi = createApi({
         method: "POST",
         body: { id },
       }),
-      invalidatesTags:['getProducts']
-    }),
-
-     /**
-     * get edit product
-     */
-
-     getEitProduct: builder.query({
-      query: ({product_id}) => `get-edit-product?product_id=${product_id}`,
-      providesTags:['getEditProduct']
+      invalidatesTags: ["getProducts"],
     }),
 
     /**
-     * admin edit products  
+     * get edit product
+     */
+
+    getEitProduct: builder.query({
+      query: ({ product_id }) => `get-edit-product?product_id=${product_id}`,
+      providesTags: ["getEditProduct"],
+    }),
+
+    /**
+     * admin edit products
      */
 
     EditProduct: builder.mutation({
-      query : (form)=>({
+      query: (form) => ({
         url: "/admin-edit-product",
         method: "PUT",
-        body: form
+        body: form,
       }),
-      invalidatesTags:['getProducts','getEditProduct']
+      invalidatesTags: ["getProducts", "getEditProduct"],
     }),
 
     /**
@@ -157,14 +159,112 @@ export const adminApi = createApi({
      */
 
     OrdersList: builder.query({
-      query:({page,limit})=>`/get-orders-list?page=${page}$limit=${limit}`,
-      providesTags:['getOrdersDetails']
-    })
+      query: ({ page, limit }) =>
+        `/get-orders-list?page=${page}$limit=${limit}`,
+      providesTags: ["getOrdersDetails"],
+    }),
 
-   
+    /**
+     * change order status
+     */
 
-// ---------------
-  }), 
+    ChangeOrderStatus: builder.mutation({
+      query: ({ user_id, order_id, action }) => ({
+        url: "/change-order-status",
+        method: "PUT",
+        body: { user_id, order_id, action },
+      }),
+      invalidatesTags: ["getOrdersDetails"],
+    }),
+
+    /**
+     * admin add coupon
+     */
+
+    AddCoupon: builder.mutation({
+      query: (form) => ({
+        url: "/admin-add-coupon",
+        method: "POST",
+        body: form,
+      }),
+      invalidatesTags: ["getcoupons"],
+    }),
+
+    /**
+     * admin get coupon list
+     */
+
+    GetCouponList: builder.query({
+      query: ({ page, limit }) =>
+        `/get-coupon-list?page=${page}$limit=${limit}`,
+      providesTags: ["getcoupons"],
+    }),
+
+    /**
+     * admin block unblock coupon
+     */
+
+    BlockCoupon: builder.mutation({
+      query: ({ id }) => ({
+        url: "/admin-block-coupon",
+        method: "POST",
+        body: { id },
+      }),
+      invalidatesTags: ["getcoupons"],
+    }),
+
+    /**
+     * admin add offer
+     */
+
+    AddOffer: builder.mutation({
+      query: (form) => ({
+        url: "/admin-add-offer",
+        method: "POST",
+        body: form,
+      }),
+    }),
+
+    /**
+     * get offer list
+     */
+
+    getOffer: builder.query({
+      query: ({ page, limit }) => `/get-offer-list?page=${page}$limit=${limit}`,
+      providesTags:["getOffers"]
+    }),
+
+    /**
+     * admin block offer
+     */
+
+    Blockffer: builder.mutation({
+      query: ({ id }) => ({
+        url: "/admin-block-offer",
+        method: "POST",
+        body: { id }
+      }),
+      invalidatesTags: ["getOffers"]
+    }),
+
+    /**
+     * sales report
+     */
+
+  
+    // GetSalesReport: builder.query({
+    //   query: ({ sortBy, startDate, endDate, page,limit }) =>
+    //     `/get-sales-report?page=${page}$limit=${limit}$sortBy=${sortBy}&startDate=${startDate}&endDate=${endDate}`,
+    //   providesTags: ['getSalesReport'],
+    // }),
+    GetSalesReport: builder.query({
+      query: ({ sortBy, startDate, endDate, page, limit }) =>
+        `/get-sales-report?page=${page}&limit=${limit}&sortBy=${sortBy}&startDate=${startDate}&endDate=${endDate}`,
+      providesTags: ['getSalesReport'],
+    }),
+    
+    // ---------------
+  }),
 });
 
 export const {
@@ -181,5 +281,12 @@ export const {
   useEditProductMutation,
   useGetEitProductQuery,
   useOrdersListQuery,
-
+  useChangeOrderStatusMutation,
+  useAddCouponMutation,
+  useGetCouponListQuery,
+  useBlockCouponMutation,
+  useAddOfferMutation,
+  useGetOfferQuery,
+  useBlockfferMutation,
+  useGetSalesReportQuery,
 } = adminApi;

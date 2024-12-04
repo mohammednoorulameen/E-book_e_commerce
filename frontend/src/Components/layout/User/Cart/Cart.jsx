@@ -123,13 +123,15 @@ const Cart = () => {
                     className="w-12 text-center border-0 sm:w-10"
                     />
                   <p className="text-red-500">{outOfStock}</p>
-                { item.quantity < 5 &&  <button
+                {item.stock && item.quantity < 5 &&  <button
                     onClick={() => handleQuantityChange('add',item.id,item.quantity,item.price,item.stock)}
                     className="px-3 py-1 bg-gray-200 hover:bg-gray-300 w-12 sm:w-auto"
                     >
-                    +
+                   {item.stock <= item.quantity   ? "x" : "+" }
                   </button>}
+                  
                 </div>
+                
                 <p className="font-semibold text-lg mt-2 sm:mt-0">
                 ₹{(item.price * item.quantity).toFixed(2)}
                 </p>
@@ -139,8 +141,10 @@ const Cart = () => {
                   >
                   <TrashIcon className="w-5 h-5" />
                 </button>
+                <p className="text-red-500">{item.stock <= item.quantity && "stock is over"}</p>
               </div>
             </div>
+            
           ))}
         </div>
 

@@ -20,10 +20,10 @@ const sidebarItems = [
   { name: "Users", icon: FaUsers, path: "/admin/users" },
   { name: "Categories", icon: FaCalendar, path: "/admin/category" },
   { name: "Orders", icon: FaShoppingCart, path: "/admin/orders" },
-  { name: "Coupons", icon: FaPercent, path: "" },
+  { name: "Coupons", icon: FaPercent, path: "/admin/coupons" },
+  { name: "Offers", icon: FaChartLine, path: "/admin/offers" },
   { name: "Banners", icon: FaDesktop, path: "" },
   { name: "Payments", icon: FaCreditCard, path: "" },
-  { name: "Offers", icon: FaChartLine, path: "" },
 ];
 
 const AdminSidebar = ({ sidebarOpen }) => {

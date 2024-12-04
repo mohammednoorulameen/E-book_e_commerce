@@ -31,7 +31,7 @@ const AddCart = async (req, res) => {
       product.stock -= quantity
       await product.save()
     }
-    // let cart = await Cart.findOne({ user_id: userId });
+
 
 
     /**
@@ -110,7 +110,7 @@ const GetCartItems = async (req, res) => {
         },
       },
     ]);
-    console.log("cartItems", cartItems);
+
     await res.status(200).json({ message: "success", cartItems });
   } catch (error) {
     res.status(500).json({ message: "failed get cart items  " });
@@ -122,13 +122,33 @@ const GetCartItems = async (req, res) => {
  */
 
 const DeleteCartProduct = async (req, res) => {
+
   const userId = req.userId;
   const {product_id} = req.body;
   try {
-    let cart = await Cart.findOneAndUpdate(
+
+    const cart = Cart.findOne({user_id:userId}) 
+    if (!cart) {
+      res.status(404).json({ message: "cart cannot find" })
+    }
+
+    // if (!productToRemove) {
+    //   return res.status(404).json({ message: "Product not found in cart" });
+    // }
+
+    const productPrice = productRemove.price * productRemove.quantity;
+    const newTotalPrice = cart.totalPrice - productPrice
+
+    const productRemove = cart.items.find(item => item.product_id.toStriing()=== product_id)
+     cart = await Cart.findOneAndUpdate(
       { user_id: userId },
-      { $pull: { items: { product_id: product_id } } }
+      { $pull: { items: { product_id: product_id } },
+        $set: {totalPrice : newTotalPrice}
+    },
+    {new : true}
+      
     );
+    
     res.status(200).json({ message: "cart item delete successfully" });
   } catch (error) {
     console.log("delete failed", error);

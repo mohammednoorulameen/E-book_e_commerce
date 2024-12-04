@@ -35,51 +35,17 @@ cartSchema.pre('save', function (next) {
     next();
 });
 
-const Cart = mongoose.model('Cart', cartSchema);
-export default Cart;
+// cartSchema.pre('findOneAndUpdate', function (next) {
+//     // Get the updated items list
+//     const updatedItems = this.getUpdate().$set.items;
 
-
-// import mongoose from 'mongoose'
-
-// const cartSchema = mongoose.Schema({
-//     user_id:{
-//         type:mongoose.Schema.Types.ObjectId,
-//         ref:'User',
-//         required:true
-//     },
-//     items:[
-//         {
-//             product_id:{
-//                 type:mongoose.Schema.Types.ObjectId,
-//                 ref:'Products',
-//                 required: true
-//             },
-//             quantity:{
-//                 type:Number,
-//                 required:true
-//             },
-//             price: {
-//                 type:Number,
-//                 required:true,
-//             },
-//             _id:false
-//         }
-//     ],
-//     totalPrice:{
-//         type:Number,
-//         required:true
+//     if (updatedItems) {
+//         this.getUpdate().$set.totalPrice = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 //     }
-// },{ timestamps:true })
-
-// cartSchema.pre("save",function(next){
-//     this.totalPrice = this.items.reduce((acc, item) => {
-//         return acc + item.price;
-//       }, 0);
-    
-//       this.updatedAt = Date.now();
-//       next();
+//     next();
 // });
 
-// const Cart = mongoose.model('Cart',cartSchema)
-// export default Cart
+
+const Cart = mongoose.model('Cart', cartSchema);
+export default Cart;
 

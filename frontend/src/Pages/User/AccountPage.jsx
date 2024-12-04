@@ -5,6 +5,9 @@ import ChangePassword from "../../Components/layout/User/Account/ChangePassword"
 import ManageAddress from "../../Components/layout/User/Account/ManageAddress";
 import OrderHistory from "../../Components/layout/User/Account/OrderHistory";
 import Setting from "../../Components/layout/User/Account/Settings";
+import Wallet from "../../Components/layout/User/Account/Wallet";
+import Referrals from "../../Components/layout/User/Account/Referrals";
+import Notifications from "../../Components/layout/User/Account/Notifications";
 
 const AccountPage = () => {
   return (
@@ -46,6 +49,29 @@ const OrderHistoryPage = () => {
   );
 };
 
+const WalletPage = () => {
+  return (
+    <div>
+      <Wallet />
+    </div>
+  );
+};
+
+const ReferralsPage = () => {
+  return (
+    <div>
+      <Referrals />
+    </div>
+  );
+};
+
+const NotificationsPage = () => {
+  return (
+    <div>
+      <Notifications />
+    </div>
+  );
+};
 const SettingsPage = () => {
   return (
     <div>
@@ -53,11 +79,15 @@ const SettingsPage = () => {
     </div>
   );
 };
+
 export {
   AccountPage,
   EditProfilePage,
   ChangePasswordPage,
   ManageAddressPage,
   OrderHistoryPage,
+  WalletPage,
+  ReferralsPage,
+  NotificationsPage,
   SettingsPage,
 };

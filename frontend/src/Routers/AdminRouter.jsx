@@ -10,6 +10,8 @@ import AdminEditProductPage from '../Pages/Admin/AdminEditProductPage'
 import AdminAuth from '../Utils/Protector/AdminAuth'
 import AdminPrivate from '../Utils/Protector/AdminPrivate'
 import { AdminOdersPage, AdminOrdersDetailesPage } from '../Pages/Admin/AdminOdersPage'
+import {AdminCouponsPage,AdminAddCouponsPage} from '../Pages/Admin/AdminCouponsPage'
+import {AdminOffersPage, AdminAddOffersPage} from '../Pages/Admin/AdminOffersPage'
 
 
 const adminRoutes=[
@@ -63,9 +65,30 @@ const adminRoutes=[
         path:'orders',
         element: <AdminOdersPage/>
       },
+      
       {
         path:'ordersdetails/:userId',
         element: <AdminOrdersDetailesPage/>
+      },
+
+      {
+        path: 'coupons',
+        element: <AdminCouponsPage/>
+      },
+
+      {
+        path:'offers',
+        element: <AdminOffersPage/>
+      },
+
+      {
+        path:'add-coupon',
+        element: <AdminAddCouponsPage/>
+      },
+
+      {
+        path:'add-offers',
+        element: <AdminAddOffersPage/>
       }
 
     ]
@@ -74,16 +97,3 @@ const adminRoutes=[
 
 export default adminRoutes
 
-
-// const AdminRouter = () => {
-//   return (
-//     <div>
-//         <Routes>
-//             <Route path='/adminlogin' element={< LoginPage/>} />
-//             <Route path='/admindashboard' element={<AdminDashboardPage/>} />
-//         </Routes>
-//     </div>
-//   )
-// }
-
-// export default AdminRouter
