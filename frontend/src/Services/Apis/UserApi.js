@@ -68,10 +68,16 @@ export const userApi = createApi({
      * product pagination
      */
 
+    // getProducts: builder.query({
+    //     query:({page,limit,category,sort})=>`/user/list-Products?page=${page}$limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
+    //     providesTags:['getProducts']
+    //   }),
     getProducts: builder.query({
-        query:({page,limit,category,sort})=>`/user/list-Products?page=${page}$limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
-        providesTags:['getProducts']
+        query: ({ page, limit, category, sort }) =>
+          `/user/list-Products?page=${page}&limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
+        providesTags: ['getProducts']
       }),
+      
 
     /**
      * get products detailes
@@ -312,6 +318,49 @@ export const userApi = createApi({
             method: 'DELETE',
             body: {product_id}
         })
+    }),
+
+    /**
+     * add wallet 
+     */
+
+    AddWallet: builder.mutation({
+        query:(item)=>({
+            url: '/user/add-wallet',
+            method:'POST',
+            body: item
+        }),
+        invalidatesTags:['getWalletDetails']
+    }),
+
+    /**
+     * get wallet 
+     */
+
+    GetWallet: builder.query({
+        query:()=>'/user/get-wallet',
+        providesTags:['getWalletDetails']
+    }),
+
+    /**
+     * failed order
+     */
+
+    FailedOrder: builder.mutation({
+        query:(items) =>({
+            url:'/user/failed-order',
+            method: 'POST',
+            body: items
+        }),
+        invalidatesTags:['getCartItems', 'getOders', 'getProductsDetails']
+    }),
+
+    RetryingPayment: builder.mutation({
+        query:(items)=>({
+            url:'/user/retry-payment',
+            method: 'POST',
+            body: items
+        })
     })
 
 
@@ -346,5 +395,10 @@ useVerifyPaymentMutation,
 useAddWhishlistMutation,
 useGetWhishlistQuery,
 useRemoveWhishlistProductsMutation,
+useAddWalletMutation,
+useGetWalletQuery,
+useFailedOrderMutation,
+useRetryingPaymentMutation,
+
 
 } = userApi

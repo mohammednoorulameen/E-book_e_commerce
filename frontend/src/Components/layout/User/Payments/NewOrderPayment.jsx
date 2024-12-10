@@ -6,6 +6,7 @@ import {
   useActiveCouponsQuery,
   useApplyCouponMutation,
   useVerifyPaymentMutation,
+  useFailedOrderMutation,
 } from "../../../../Services/Apis/UserApi";
 import { Tag, Truck, Wallet } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -29,6 +30,7 @@ const NewOrderPayment = () => {
   const { data, refetch } = useActiveCouponsQuery();
   const [ApplyCoupon] = useApplyCouponMutation();
   const [VerifyPayment] = useVerifyPaymentMutation();
+  const [FailedOrder] = useFailedOrderMutation();
 
   const totalPrice =
     cartItems[0]?.totalPrice -
@@ -78,107 +80,11 @@ const NewOrderPayment = () => {
   };
 
 
-  /**
-   * set the datas cart save
+
+   /**
+   * Load Razorpay script
    */
-
-  // const handleCartSave = () => {
-  //   const newCartSave = cartItems.map((cartItem) => ({
-  //     address_id: selectedAddress,
-  //       product_id: cartItem.id,
-  //       quantity : cartItem.quantity,
-  //       price :   cartItem.price,
-  //   }));
-  //   setCartSave(newCartSave)
-  // };
-  
-  /**
-   * call to razorpay script
-   */
-
-  const handleRazorpayPayment = async () => {
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
-      alert("Failed to load Razorpay SDK. Please try again.");
-      return;
-    }
-    const response = await PlaceOrder({
-      cartSave,
-      address_id: selectedAddress._id,
-      paymentMethod: "razorpay",
-      totalPrice,
-      couponDiscount,
-    });
-
-    console.log('response.data', response.data.order)
-    if (response.data) {
-
-      const { id: order_id, amount, currency } = response.data.order 
-
-      const options = {
-        key: "rzp_test_bzGh9EH7vBB8Yh",
-        // image: "https://your-logo-url.com/logo.png",
-        amount,
-        currency,
-        name:"Ebook",
-        description: "Order Payment",
-        order_id,
-
-        handler: async (paymentResponse) => {
-          // Handle successful payment
-          console.log('check paymentResponse', paymentResponse)
-
-          try {
-            const verificationResponse = await VerifyPayment({
-              payment_id: paymentResponse.razorpay_payment_id,
-              order_id: paymentResponse.razorpay_order_id,
-              signature: paymentResponse.razorpay_signature,
-              cartSave,
-              address_id: selectedAddress._id,
-              couponDiscount,
-            });
-            
-
-            if (verificationResponse?.data?.success) {
-              alert("Payment successful and verified!");
-              navigate("/payment-success");
-            } else {
-              alert("Payment verification failed. Please contact support.");
-            }
-          } catch (error) {
-            console.error("Error during payment verification:", error);
-            alert("An error occurred while verifying the payment.");
-          }
-          console.log(paymentResponse);
-          alert("Payment successful!");
-          // navigate("/account/orders");
-        },
-
-        prefill: {
-          name: selectedAddress?.name,
-          email: "customer@example.com",
-          contact: selectedAddress?.phone,
-        },
-        notes: {
-          address: `${selectedAddress?.address}, ${selectedAddress?.locality}`,
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } else {
-      alert("Failed to initialize payment. Please try again.");
-    }
-  };
-
-  /**
-   * load to razorpay
-   */
-
-  const loadRazorpayScript = () => {
+   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -189,39 +95,166 @@ const NewOrderPayment = () => {
   };
 
   /**
-   * checking which payment are selected
+   * Handle Razorpay payment
+   */
+  const handleRazorpayPayment = async () => {
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      alert("Failed to load Razorpay SDK. Please try again.");
+      return;
+    }
+
+    try {
+      const response = await PlaceOrder({
+        cartSave,
+        address_id: selectedAddress._id,
+        paymentMethod: "razorpay",
+        totalPrice,
+        couponDiscount,
+      });
+
+      if (response?.data?.order) {
+        const { id: order_id, amount, currency } = response.data.order;
+
+        const options = {
+          key: "rzp_test_bzGh9EH7vBB8Yh", 
+          amount,
+          currency,
+          name: "Ebook",
+          description: "Order Payment",
+          order_id,
+          handler: async (paymentResponse) => {
+            console.log("Payment Response:", paymentResponse);
+
+            try {
+              const verificationResponse = await VerifyPayment({
+                payment_id: paymentResponse.razorpay_payment_id,
+                order_id: paymentResponse.razorpay_order_id,
+                signature: paymentResponse.razorpay_signature,
+                cartSave,
+                address_id: selectedAddress._id,
+                couponDiscount,
+                paymentMethod: "razorpay"
+              });
+
+              if (verificationResponse?.data?.success) {
+                alert("Payment successful and verified!");
+                navigate("/payment-success");
+              } else {
+                navigate("/payment-failed");
+                alert("Payment verification failed. Please contact support.");
+              }
+            } catch (error) {
+              console.error("Error during payment verification:", error);
+              alert("An error occurred while verifying the payment.");
+            }
+          },
+          prefill: {
+            name: selectedAddress?.name || "Customer",
+            email: "customer@example.com", 
+            contact: selectedAddress?.phone || "1234567890",
+          },
+          notes: {
+            address: `${selectedAddress?.address}, ${selectedAddress?.locality}`,
+          },
+          theme: {
+            color: "#3399cc",
+          },
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+
+        paymentObject.on('payment.failed', function (response){
+          handlePaymentFailed(cartSave,couponDiscount)
+          console.log('payment failed', response);
+        })
+
+      } else {
+        alert("Failed to initialize payment. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during Razorpay payment initialization:", error);
+      alert("An error occurred while initializing payment.");
+    }
+  };
+
+
+
+  /**
+   * handle set cartsave 
    */
 
-
-  const HandleOrder = () => {
-
+  const handleCartSave = () =>{
     const newCartSave = cartItems.map((cartItem) => ({
-        product_id: cartItem.id,
-        quantity : cartItem.quantity,
-        price :   cartItem.price,
+      product_id: cartItem.id,
+      quantity: cartItem.quantity,
+      price: cartItem.price,
     }));
-    setCartSave(newCartSave)
-  
+    setCartSave(newCartSave);
+  }
+
+  /**
+   * Handle order placement
+   */
+  console.log('cartSave', cartSave)
+  const HandleOrder = () => {
     if (paymentMethod === "razorpay") {
-      console.log("paymentMethod", paymentMethod);
       handleRazorpayPayment();
     } else if (paymentMethod === "cod") {
       PlaceOrder({
-        cartSave:newCartSave,
+        cartSave,
         address_id: selectedAddress._id,
         paymentMethod: "cashOnDelivery",
         totalPrice,
         couponDiscount,
-      }).then(() => {
-        alert("Order placed successfully!");
-        navigate("/payment-success");
-      });
+      })
+        .then(() => {
+          alert("Order placed successfully!");
+          navigate("/payment-success");
+        })
+        .catch((error) => {
+          console.error("Error placing order:", error);
+          alert("An error occurred while placing the order.");
+        });
     }
-
-   
   };
 
 
+  /**
+   * handle Pending order
+   */
+
+  const handlePaymentFailed = async (cartSave,couponDiscount)=> {
+    try {
+      const response = await FailedOrder({
+        cartSave,
+        paymentMethod:'razorpay',
+        totalPrice,
+        couponDiscount,
+        paymentStatus: 'Pending'
+
+
+      })
+
+      if (response.data) {
+        alert('order placed successfully but payment is pending!!')
+        const razorpayModal = document.querySelector('.razorpay-container');
+        if (razorpayModal) {
+          razorpayModal.remove()
+          navigate('/payment-failed')
+        }else{
+          console.log("razorpay modal not fount ");
+          
+        }
+      }else{
+        alert(" failed place order try again")
+      }
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
 
 
 
@@ -296,6 +329,7 @@ const NewOrderPayment = () => {
                     name="razorpay"
                     id="razorpay"
                     className="mr-2"
+                    onClick={handleCartSave}
                   />
                   <label htmlFor="razorpay" className="flex-1 text-sm">
                     Razor Pay
@@ -318,7 +352,9 @@ const NewOrderPayment = () => {
                 </div>
                 {/* New COD option */}
                 <div className="flex items-center space-x-2 border rounded-lg p-3">
-                  <Radio value="cod" id="cod" className="mr-2" />
+                  <Radio 
+                  onClick={handleCartSave}
+                  value="cod" id="cod" className="mr-2" />
                   <label htmlFor="cod" className="flex-1 text-sm">
                     Cash on Delivery (COD)
                   </label>

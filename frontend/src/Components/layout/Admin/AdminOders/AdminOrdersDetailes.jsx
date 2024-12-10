@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 const AdminOrdersDetails = () => {
   const { userId } = useParams();
   const [orderActions, setOrderActions] = useState({});
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useOrdersListQuery({
     limit: 10,
   });
@@ -44,14 +44,12 @@ const AdminOrdersDetails = () => {
           price: item.price,
           orderStatus: item.orderStatus,
           orderId: item._id,
+          paymentStatus: item.payment_status,
         })),
-        address: `${order.address_id?.address || "N/A"}, ${
-          order.address_id?.city || "N/A"
-        }, ${order.address_id?.state || "N/A"}, ${
-          order.address_id?.locality || "N/A"
-        }, ${order.address_id?.pincode || "N/A"}, ${
-          order.address_id?.landmark || "N/A"
-        }`,
+        address: `${order.address_id?.address || "N/A"}, ${order.address_id?.city || "N/A"
+          }, ${order.address_id?.state || "N/A"}, ${order.address_id?.locality || "N/A"
+          }, ${order.address_id?.pincode || "N/A"}, ${order.address_id?.landmark || "N/A"
+          }`,
       }));
       setUserOrders(transformedOrders);
     }
@@ -65,7 +63,7 @@ const AdminOrdersDetails = () => {
         action,
       });
       if (response.data) {
-        navigate('/admin/orders')
+        navigate("/admin/orders");
         console.log("Order status changed successfully");
         refetch();
       }
@@ -140,6 +138,7 @@ const AdminOrdersDetails = () => {
                     <th className="px-4 py-3 text-left">Product</th>
                     <th className="px-4 py-3 text-right">Unit Price</th>
                     <th className="px-4 py-3 text-right">Quantity</th>
+                    <th className="px-4 py-3 text-right">Payment</th>
                     <th className="px-4 py-3 text-right">Total</th>
                     <th className="px-4 py-3 text-right">Status</th>
                   </tr>
@@ -160,6 +159,16 @@ const AdminOrdersDetails = () => {
                       <td className="px-4 py-3 text-right">{item.price}</td>
                       <td className="px-4 py-3 text-right">{item.quantity}</td>
                       <td className="px-4 py-3 text-right">
+                        <p  className={`px-3 py-1 rounded-full text-sm ${
+                          item.paymentStatus === "Paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.paymentStatus} 
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         {item.price * item.quantity}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -177,7 +186,6 @@ const AdminOrdersDetails = () => {
                               })
                             }
                           >
-
                             <MenuItem
                               className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-blue-200 !text-green-800"
                               value="Pending"
@@ -186,10 +194,16 @@ const AdminOrdersDetails = () => {
                             </MenuItem>
                             <MenuItem
                               className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-blue-300 !text-green-800"
-                            value="Shipped">Shipped</MenuItem>
+                              value="Shipped"
+                            >
+                              Shipped
+                            </MenuItem>
                             <MenuItem
                               className="!px-3 !py-1 !m-2 !hover:bg-blue-500 !rounded-full !text-sm !bg-green-200 !text-green-800"
-                            value="Delivered">Delivered</MenuItem>
+                              value="Delivered"
+                            >
+                              Delivered
+                            </MenuItem>
                           </Select>
                         </FormControl>
                         <Button
@@ -212,49 +226,48 @@ const AdminOrdersDetails = () => {
               </table>
             </div>
             <CardActions sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <Typography variant="body2" className="font-medium">
-                  Subtotal:
-                </Typography>
-                <Typography variant="body2">11199</Typography>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Typography variant="body2" className="font-medium">
+                    Subtotal:
+                  </Typography>
+                  <Typography variant="body2">11199</Typography>
+                </div>
+                <div className="flex justify-between">
+                  <Typography variant="body2" className="font-medium">
+                    Shipping cost:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "green" }}>
+                    Free Shipping
+                  </Typography>
+                </div>
+                <div className="flex justify-between">
+                  <Typography variant="body2" className="font-medium">
+                    Grand total:
+                  </Typography>
+                  <Typography variant="body2">11199</Typography>
+                </div>
+                <div className="flex justify-between">
+                  <Typography variant="body2" className="font-medium">
+                    Status:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      borderRadius: "9999px",
+                      bgcolor: "orange.100",
+                      px: 2,
+                      py: 0.5,
+                      fontSize: "0.75rem",
+                      color: "orange.600",
+                    }}
+                  >
+                    {order.orderStatus}
+                  </Typography>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <Typography variant="body2" className="font-medium">
-                  Shipping cost:
-                </Typography>
-                <Typography variant="body2" sx={{ color: "green" }}>
-                  Free Shipping
-                </Typography>
-              </div>
-              <div className="flex justify-between">
-                <Typography variant="body2" className="font-medium">
-                  Grand total:
-                </Typography>
-                <Typography variant="body2">11199</Typography>
-              </div>
-              <div className="flex justify-between">
-                <Typography variant="body2" className="font-medium">
-                  Status:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    borderRadius: "9999px",
-                    bgcolor: "orange.100",
-                    px: 2,
-                    py: 0.5,
-                    fontSize: "0.75rem",
-                    color: "orange.600",
-                  }}
-                >
-                  {order.orderStatus}
-                </Typography>
-              </div>
-            </div>
-          </CardActions>
+            </CardActions>
           </CardContent>
-          
         </Card>
       ))}
     </div>

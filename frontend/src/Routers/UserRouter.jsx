@@ -16,6 +16,7 @@ import {
   ChangePasswordPage,
   ManageAddressPage,
   OrderHistoryPage,
+  OrderHistoryProductDetailesPage,
   SettingsPage,
   WalletPage,
   ReferralsPage,
@@ -24,7 +25,7 @@ import {
 import UserPrivate from "../Utils/Protector/UserPrivate";
 import ForgotPasswordPage from "../Pages/User/ForgotPasswordPage";
 import CheckOutPage from "../Pages/User/CheckOutPage";
-import {NewOrderPaymentPage, PaymentSuccessPage} from "../Pages/User/PaymentsPage";
+import {FailedPaymentPage, NewOrderPaymentPage, PaymentSuccessPage} from "../Pages/User/PaymentsPage";
 import { elements } from "chart.js";
 import WhishlistPage from "../Pages/User/WhishlistPage";
 
@@ -137,6 +138,11 @@ const UserRouter = [
       },
 
       {
+        path: "/orderdetails/:productId",
+        element: <OrderHistoryProductDetailesPage/>
+      },
+
+      {
         path: "/cart",
         element: <UserPrivate>
           <CartPage/>
@@ -160,6 +166,11 @@ const UserRouter = [
       },
 
       {
+        path: "/payment-failed",
+        element : <FailedPaymentPage/>
+      },
+
+      {
         path: "/whishlist",
         element : <WhishlistPage/>
       }
@@ -169,3 +180,5 @@ const UserRouter = [
 ];
 
 export default UserRouter;
+
+

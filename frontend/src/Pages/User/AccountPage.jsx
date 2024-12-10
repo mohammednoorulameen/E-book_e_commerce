@@ -3,7 +3,7 @@ import Account from "../../Components/layout/User/Account/Account";
 import EditProfile from "../../Components/layout/User/Account/EditProfile";
 import ChangePassword from "../../Components/layout/User/Account/ChangePassword";
 import ManageAddress from "../../Components/layout/User/Account/ManageAddress";
-import OrderHistory from "../../Components/layout/User/Account/OrderHistory";
+import { OrderHistory, OrderHistoryProductDetailes } from "../../Components/layout/User/Account/OrderHistory";
 import Setting from "../../Components/layout/User/Account/Settings";
 import Wallet from "../../Components/layout/User/Account/Wallet";
 import Referrals from "../../Components/layout/User/Account/Referrals";
@@ -49,6 +49,14 @@ const OrderHistoryPage = () => {
   );
 };
 
+const OrderHistoryProductDetailesPage = () => {
+  return (
+    <div>
+      <OrderHistoryProductDetailes/>
+    </div>
+  );
+};
+
 const WalletPage = () => {
   return (
     <div>
@@ -86,6 +94,7 @@ export {
   ChangePasswordPage,
   ManageAddressPage,
   OrderHistoryPage,
+  OrderHistoryProductDetailesPage,
   WalletPage,
   ReferralsPage,
   NotificationsPage,

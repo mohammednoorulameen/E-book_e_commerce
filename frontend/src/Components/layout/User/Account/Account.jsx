@@ -13,11 +13,7 @@ import {
 import { Button, Typography } from "@mui/material";
 import { Card, CardContent, CardHeader } from "@mui/material";
 import { Avatar } from "@mui/material";
-import EditProfile from "./EditProfile";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import ChangePassword from "./ChangePassword";
-import ManageAddress from "./ManageAddress";
-import OrderHistory from "./OrderHistory";
 import Setting from "./Settings";
 import { useSelector } from "react-redux";
 import {

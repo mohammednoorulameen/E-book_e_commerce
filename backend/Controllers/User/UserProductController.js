@@ -63,9 +63,9 @@ const ListProduct = async (req, res) => {
     const sort = req.query.sort || "" ;
 
     const sortOption = {};
-    console.log("check")
-    if (sort == 'price-accending')  sortOption.price = 1;   
-    if (sort == 'price-descending') sortOption.price = -1;
+    if (sort == 'price-all')  sortOption.price    
+    if (sort == 'price-accending')  sortOption.price = -1;   
+    if (sort == 'price-descending') sortOption.price = 1;
     if (sort == 'Popularity') sortOption.price = -1
     if (sort == 'newest')  sortOption.createdAt = -1
 
@@ -77,7 +77,6 @@ const ListProduct = async (req, res) => {
     if (category && category !=  "all") {
       categoryFilter.category = category
     }
-
     const allProducts = await Products.find(categoryFilter)
     const products = await Products.find(categoryFilter)
       .sort(sortOption)

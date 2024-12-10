@@ -1,8 +1,12 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, Button } from "@mui/material";
-
+import {useAddWalletMutation,
+  useGetWalletQuery} from '../../../../Services/Apis/UserApi'
 
 const Wallet = () => {
+
+  const [AddWallet] = useAddWalletMutation()
+  const {data} = useGetWalletQuery()
   return (
     <div>
         <div className="space-y-6">

@@ -41,7 +41,7 @@ export default function Header() {
   const userProfile = profile?.userProfile;
   const { data: cart, isLoading } = useGetCartItemsQuery();
   const debouncedQuery = useDebounce(searchQuery, 500);
-  const { data:whishlist } = useGetWhishlistQuery();
+  const { data: whishlist } = useGetWhishlistQuery();
 
   console.log("allProducts", whishlist);
   // Calculate total count of items in cart
@@ -49,13 +49,12 @@ export default function Header() {
     cart?.cartItems?.reduce((total, item) => total + item.items.quantity, 0) ||
     0;
 
-    /**
-     * whishlist count 
-     */
-   
-    const whishLisitemCount = whishlist?.items?.length || 0;
-console.log("Total items in wishlist:", whishLisitemCount);
+  /**
+   * whishlist count
+   */
 
+  const whishLisitemCount = whishlist?.items?.length || 0;
+  console.log("Total items in wishlist:", whishLisitemCount);
 
   /**
    * setting user data
@@ -343,6 +342,16 @@ console.log("Total items in wishlist:", whishLisitemCount);
                     </Link>
                   )}
 
+                  {userData && (
+                    <Link
+                      onClick={HandleLogout}
+                      className="flex text-red-500 items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaSignOutAlt />
+                      <span>Logout</span>
+                    </Link>
+                  )}
+
                   <Link
                     to="/wishlist"
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
@@ -357,15 +366,6 @@ console.log("Total items in wishlist:", whishLisitemCount);
                     <FaClipboardList />
                     <span>Orders</span>
                   </Link>
-                  {userData && (
-                    <Link
-                      onClick={HandleLogout}
-                      className="flex text-red-500 items-center gap-2 px-4 py-2 hover:bg-gray-100"
-                    >
-                      <FaSignOutAlt />
-                      <span>Logout</span>
-                    </Link>
-                  )}
                 </div>
               </div>
 

@@ -155,7 +155,7 @@ const AdminAddCoupon = () => {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Offer"
+              placeholder="Offer %"
             />
             {formik.touched.offer && formik.errors.offer && (
               <div className="text-red-600">{formik.errors.offer}</div>

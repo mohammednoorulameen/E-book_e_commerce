@@ -31,13 +31,25 @@ import {
   getOrders,
   CancelOrder,
   VerifyPayment,
+  failedPayment,
+  retryingPayment,
+  verifyRetry,
 } from "../Controllers/User/UserOrderController.js";
 import {
   ActiveCoupons,
   ApplyCoupon,
 } from "../Controllers/User/UserCouponController.js";
 
-import { AddWhishList, whishList, RemoveWishList } from "../Controllers/User/WhishlistController.js";
+import {
+  AddWhishList,
+  whishList,
+  RemoveWishList,
+} from "../Controllers/User/WhishlistController.js";
+
+import {
+  getWallet,
+  addWallet,
+} from "../Controllers/User/UserWalletController.js";
 
 /**
  * GET
@@ -51,7 +63,8 @@ userRouter.get("/user-address", VerifyToken, GetAddress);
 userRouter.get("/get-cart-items", VerifyToken, GetCartItems);
 userRouter.get("/get-order-items", VerifyToken, getOrders);
 userRouter.get("/active-coupons", VerifyToken, ActiveCoupons);
-userRouter.get("/get-whishlist", VerifyToken, whishList)
+userRouter.get("/get-whishlist", VerifyToken, whishList);
+userRouter.get("/get-wallet", VerifyToken, getWallet);
 
 /**
  * POST
@@ -69,7 +82,11 @@ userRouter.post("/add-address", VerifyToken, AddAddress);
 userRouter.post("/add-cart", VerifyToken, AddCart);
 userRouter.post("/place-order", VerifyToken, PlaceOrder);
 userRouter.post("/verify-payment", VerifyToken, VerifyPayment);
+userRouter.post("/failed-order", VerifyToken, failedPayment);
+userRouter.post("/retry-payment", VerifyToken, retryingPayment);
+userRouter.post("/verify-retry", VerifyToken, verifyRetry);
 userRouter.post("/add-whishlist", VerifyToken, AddWhishList);
+userRouter.post("/add-wallet", VerifyToken, addWallet);
 
 /**
  * PUT
@@ -85,6 +102,6 @@ userRouter.put("/apply-coupon", VerifyToken, ApplyCoupon);
 
 userRouter.delete("/delete-address", VerifyToken, DeleteAddress);
 userRouter.delete("/delete-cart-product", VerifyToken, DeleteCartProduct);
-userRouter.delete("/delete-whishlist-products", VerifyToken, RemoveWishList)
+userRouter.delete("/delete-whishlist-products", VerifyToken, RemoveWishList);
 
 export default userRouter;

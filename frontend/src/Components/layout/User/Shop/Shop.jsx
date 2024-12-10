@@ -17,7 +17,7 @@ const Shop = () => {
   const [categoryList, SetCategoryList] = useState([]);
   const { data, isLoading, isError, refetch } = useGetProductsQuery({
     page: currentPage,
-    limit: 10,
+    limit: 12,
     sort: selectedSort,
     category: selectedCategory === "all" ? undefined : selectedCategory,
   });
@@ -137,6 +137,7 @@ const Shop = () => {
                 onChange={handleSortChange}
                 className="rounded border border-black bg-white px-4 py-2 text-black"
               >
+                <option value="price-all">All</option>
                 <option value="price-accending">High to Low</option>
                 <option value="price-descending">Low to High</option>
                 <option value="popularity">Popularity</option>
@@ -150,11 +151,12 @@ const Shop = () => {
                 Filter By
               </label>
               <select
-                value={selectedSort}
+                value={selectedCategory}
                 onChange={handleCategoryChange}
                 className="rounded border border-black bg-white px-4 py-2 text-black"
               >
-                <option value="all">Filter Category</option>
+                <option value="all">{selectedCategory}</option>
+                <option value="all">All</option>
                 {categoryList.map((item) => (
                   <option key={item._id} value={item.category}>
                     {item.category}

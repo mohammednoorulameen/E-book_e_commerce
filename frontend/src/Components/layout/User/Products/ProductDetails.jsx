@@ -33,6 +33,9 @@ const ProductDetails = () => {
   const [rating, Setrating] = useState(0);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+
+  console.log('data', data)
+
   /**
    * handle add to wishlist
    */
