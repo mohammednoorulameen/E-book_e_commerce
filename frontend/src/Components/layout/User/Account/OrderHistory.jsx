@@ -7,6 +7,7 @@ import {
   useGetOrderDetailesQuery,
   useCancelOrderMutation,
   useRetryingPaymentMutation,
+  useVerifyRetryMutation,
 } from "../../../../Services/Apis/UserApi";
 import { OrderCancelModal, OrderReturnModal } from "../../../Modals/OrderModal";
 
@@ -20,6 +21,7 @@ const OrderHistory = () => {
   const [OrderData, setOderData] = useState([]);
   const [CancelOrder] = useCancelOrderMutation();
   const [RetryingPayment, { error }] = useRetryingPaymentMutation();
+  const [VerifyRetry] = useVerifyRetryMutation();
   const { data, refetch } = useGetOrderDetailesQuery({
     page: currentPage,
     limit: 5,
@@ -35,6 +37,7 @@ const OrderHistory = () => {
         order.items.map((item) => ({
           productId: item.product_id[0]._id,
           orderId: order._id,
+          orderItemId: item._id,
           orderDate: new Date(item.itemCreatedAt).toLocaleDateString(),
           // totalItems: order.items.length,
           payableAmount: item.payableAmount || "N/A",
@@ -48,6 +51,7 @@ const OrderHistory = () => {
           }, ${order.address_id[0]?.pincode || "N/A"}, ${
             order.address_id[0]?.landmark || "N/A"
           }`,
+          address_id: order.address_id[0]?._id,
           productName: item.product_id[0]?.productName || "N/A",
           category: item.product_id[0]?.category || "N/A",
           quantity: item.quantity,
@@ -135,82 +139,83 @@ const OrderHistory = () => {
 
     // }
   };
-/**
- * Load Razorpay script
- */
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
 
-/**
- * Handle Retry
- */
-const handleRetry = async (amount, order_id) => {
-  try {
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
-      alert("Failed to load Razorpay . Please try again.");
-      return;
-    }
+  /**
+   * Load Razorpay script
+   */
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
-    const response = await RetryingPayment({ amount, order_id });
-    console.log('response', response)
-    if (response.data) {
-      const { id: newOrderId, amount, currency } = response.data.order;
+  /**
+   * Handle Retry
+   */
+  const handleRetry = async (amount, order_id, address) => {
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Failed to load Razorpay . Please try again.");
+        return;
+      }
 
-      const options = {
-        key: "rzp_test_bzGh9EH7vBB8Yh", 
-        amount,
-        currency,
-        order_id: newOrderId,
-        name: "Ebook",
-        description: "Order Payment",
-        handler: async function (paymentResponse) {
-          try {
-            const verifyResponse = await verifyRetry({
-              payment_id: paymentResponse.razorpay_payment_id,
-              order_id: paymentResponse.razorpay_order_id,
-              signature: paymentResponse.razorpay_signature,
-            });
-            if (verifyResponse.data) {
-              alert("Payment successful!");
-            } else {
-              alert("Payment verification failed. Please try again.");
+      const response = await RetryingPayment({ amount, order_id, address });
+      const orderId = response.data.order_id;
+      if (response.data) {
+        const { id: newOrderId, amount, currency } = response.data.order;
+
+        const options = {
+          key: "rzp_test_bzGh9EH7vBB8Yh",
+          amount,
+          currency,
+          order_id: newOrderId,
+          name: "Ebook",
+          description: "Order Payment",
+          handler: async function (paymentResponse) {
+            try {
+              const verifyResponse = await VerifyRetry({
+                payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                signature: paymentResponse.razorpay_signature,
+                orderId,
+              });
+              console.log("verifyResponse", verifyResponse);
+              if (verifyResponse.data) {
+                alert("Payment successful!");
+                refetch();
+              } else {
+                alert("Payment verification failed. Please try again.");
+              }
+            } catch (error) {
+              console.error("Error during payment verification:", error);
+              alert("An error occurred while verifying the payment.");
             }
-          } catch (error) {
-            console.error("Error during payment verification:", error);
-            alert("An error occurred while verifying the payment.");
-          }
-        },
-        prefill: {
-          name: selectedAddress?.name || "Customer",
-          email: "customer@example.com", 
-          contact: selectedAddress?.phone || "1234567890",
-        },
-        notes: {
-          address: `${selectedAddress?.address}, ${selectedAddress?.locality}`,
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
+          },
+          prefill: {
+            name: "Customer",
+            email: "customer@example.com",
+            contact: "1234567890",
+          },
 
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } else {
-      alert("Failed to initialize payment. Please try again.");
+          theme: {
+            color: "#3399cc",
+          },
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+      } else {
+        alert("Failed to initialize payment. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during retry:", error);
     }
-  } catch (error) {
-    console.error("Error during retry:", error);
-  }
-};
-
+  };
 
   /**
    * get total products count
@@ -279,70 +284,39 @@ const handleRetry = async (amount, order_id) => {
                       View Details
                     </Button>
 
-                    {/* {order.status !== "Cancelled" &&
-                    order.status !== "Delivered" ? (
+                    {order.payment_status == "Pending" &&
+                    order.payment_Method == "razorpay" ? (
                       <Button
                         onClick={() =>
-                          handleOrderCancelOpenModal({
-                            order_id: order.orderId,
-                            product_id: order.productId,
-                            quantity: order.quantity,
-                          })
+                          handleRetry(
+                            order.payableAmount,
+                            order.orderItemId,
+                            order.address_id
+                          )
                         }
                         variant="outlined"
-                        color="error"
+                        color="success"
                       >
-                        Cancel
+                        Retry
                       </Button>
                     ) : (
-                      order.payment_status == "Pending" &&
-                      order.payment_Method == "razorpay" && (
+                      order.status !== "Cancelled" &&
+                      order.status !== "Delivered" && (
                         <Button
                           onClick={() =>
-                            handleRetry(order.orderId, order.payableAmount)
+                            handleOrderCancelOpenModal({
+                              order_id: order.orderId,
+                              product_id: order.productId,
+                              quantity: order.quantity,
+                            })
                           }
                           variant="outlined"
-                          color="primary"
+                          color="error"
                         >
-                          Retry
+                          Cancel
                         </Button>
                       )
-                    )} */}
-
-
-                {
-                order.payment_status == "Pending" &&
-                order.payment_Method == "razorpay"
-                    ? (
-                      <Button
-                      onClick={() =>
-                        handleRetry(order.orderId, order.payableAmount)
-                      }
-                      variant="outlined"
-                      color="primary"
-                    >
-                      Retry
-                    </Button>
-                    ) : (
-                      order.status !== "Cancelled" && 
-                      order.status !== "Delivered" &&(
-                        <Button
-                        onClick={() =>
-                          handleOrderCancelOpenModal({
-                            order_id: order.orderId,
-                            product_id: order.productId,
-                            quantity: order.quantity,
-                          })
-                        }
-                        variant="outlined"
-                        color="error"
-                      >
-                        Cancel
-                      </Button>
-                      )
                     )}
-
-
 
                     {order.status == "Delivered" && (
                       <Button
@@ -424,12 +398,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
 import {
   CardMedia,
-  // CardContent,
-  // Box,
-  // Button,
   Chip,
-  // Typography,
-  // Card,
   Table,
   TableBody,
   TableRow,
@@ -451,6 +420,8 @@ const OrderHistoryProductDetailes = () => {
     page: currentPage,
     limit: 5,
   });
+  const [RetryingPayment, { error }] = useRetryingPaymentMutation();
+  const [VerifyRetry] = useVerifyRetryMutation();
   const totalPage = data?.totalPage || 1;
 
   useEffect(() => {
@@ -478,6 +449,7 @@ const OrderHistoryProductDetailes = () => {
               order.address_id[0]?.landmark || "N/A"
             }`,
             productId: item.product_id[0]?._id,
+            orderItemId: item._id,
             orderId: order._id,
             image: item.product_id[0]?.images?.[0] || "N/A",
             productName: item.product_id[0]?.productName || "N/A",
@@ -567,12 +539,86 @@ const OrderHistoryProductDetailes = () => {
     // Address Details
     doc.text("Shipping Address:", 20, 180);
     doc.text(`${order.address}`, 30, 190);
-    // doc.text(`City: ${order.addressDetails.city}`, 30, 200);
-    // doc.text(`Pincode: ${order.addressDetails.pincode}`, 30, 210);
-    // doc.text(`Phone: ${order.addressDetails.phone}`, 30, 220);
 
     // Save PDF
     doc.save(`invoice_${order.orderId}.pdf`);
+  };
+
+  /**
+   * Load Razorpay script
+   */
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  /**
+   * Handle Retry
+   */
+  const handleRetry = async (amount, order_id, address) => {
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Failed to load Razorpay . Please try again.");
+        return;
+      }
+
+      const response = await RetryingPayment({ amount, order_id, address });
+      const orderId = response.data.order_id;
+      if (response.data) {
+        const { id: newOrderId, amount, currency } = response.data.order;
+
+        const options = {
+          key: "rzp_test_bzGh9EH7vBB8Yh",
+          amount,
+          currency,
+          order_id: newOrderId,
+          name: "Ebook",
+          description: "Order Payment",
+          handler: async function (paymentResponse) {
+            try {
+              const verifyResponse = await VerifyRetry({
+                payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                signature: paymentResponse.razorpay_signature,
+                orderId,
+              });
+              console.log("verifyResponse", verifyResponse);
+              if (verifyResponse.data) {
+                refetch();
+                alert("Payment successful!");
+              } else {
+                alert("Payment verification failed. Please try again.");
+              }
+            } catch (error) {
+              console.error("Error during payment verification:", error);
+              alert("An error occurred while verifying the payment.");
+            }
+          },
+          prefill: {
+            name: "Customer",
+            email: "customer@example.com",
+            contact: "1234567890",
+          },
+
+          theme: {
+            color: "#3399cc",
+          },
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+      } else {
+        alert("Failed to initialize payment. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during retry:", error);
+    }
   };
 
   return (
@@ -664,6 +710,9 @@ const OrderHistoryProductDetailes = () => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Quantity: {order.quantity}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Payment: {order.payment_status}
                   </Typography>
                 </Box>
                 <Typography variant="body2" sx={{ fontWeight: "bold" }}>
@@ -763,7 +812,8 @@ const OrderHistoryProductDetailes = () => {
           </Card>
         ))}
 
-        {/* Action Buttons */}
+
+        
         {orderDetails.map((order, index) => (
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
             <Button
@@ -773,6 +823,8 @@ const OrderHistoryProductDetailes = () => {
             >
               Download Invoice
             </Button>
+
+            {/* cancel order */}
 
             {order.order_status !== "Cancelled" &&
             order.order_status !== "Delivered" ? (
@@ -792,6 +844,29 @@ const OrderHistoryProductDetailes = () => {
             ) : (
               ""
             )}
+
+            {/* retry payment */}
+
+            { order.payment_status == "Pending" &&
+            order.payment_Method == "razorpay" ? (
+              <Button
+                onClick={() =>
+                  handleRetry(
+                    order.payableAmount,
+                    order.orderItemId,
+                    order.address_id
+                  )
+                }
+                variant="outlined"
+                color="success"
+              >
+                Retry Payment
+              </Button>
+            ) : (
+              ""
+            )}
+
+            {/* handle return */}
 
             {order.order_status == "Delivered" && (
               <Button

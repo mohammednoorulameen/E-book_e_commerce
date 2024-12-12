@@ -305,7 +305,7 @@ const failedPayment = async (req, res) => {
 
   try {
     const user_id = req.userId;
-    const { couponDiscount, cartSave, payment_id, paymentMethod } = req.body;
+    const { couponDiscount, cartSave, payment_id, paymentMethod, address_id } = req.body;
     console.log('payment_Method', payment_id)
 
 
@@ -378,6 +378,7 @@ const failedPayment = async (req, res) => {
       order = await Orders.create({
         user_id,
         items: OrderItemsWithOffers,
+        address_id
       });
       console.log("Created new order:", order);
     }
@@ -415,13 +416,15 @@ const failedPayment = async (req, res) => {
 
 const retryingPayment = async (req, res) => {
   try {
-    const { amount, order_id } = req.body;
+    const {order_id, amount  } = req.body;
     console.log('amount, order_id', amount, order_id)
+
     const options = {
       amount: amount * 100,
       currency: "INR",
       receipt: `receipt_${new Date().getTime()}`,
     };
+
     console.log('options', options)
     const order = await razorpayInstance.orders.create(options);
     console.log('check order', order)
@@ -441,11 +444,21 @@ const verifyRetry = async (req, res) => {
     const user_id = req.userId;
     const secret = process.env.RAZORPAY_KEY_SECRET;
 
+    console.log(' payment_id, razorpay_order_id, signature, orderId', 
+      payment_id, razorpay_order_id, signature, orderId
+    )
+
     const generatedSignature = crypto
       .createHmac("sha256", secret)
       .update(`${razorpay_order_id}|${payment_id}`)
       .digest("hex");
-    if (generatedSignature == signature) {
+      
+      const matchedOrder = await Orders.findOne({ user_id: user_id, "items._id": orderId });
+      console.log("Matched Order Before Update:", matchedOrder);
+      
+    if (generatedSignature === signature) {
+      console.log("check 1 "),
+      
       await Orders.updateOne(
         { user_id: user_id, "items._id": orderId },
         {
@@ -455,6 +468,7 @@ const verifyRetry = async (req, res) => {
           },
         }
       );
+     
       res
         .status(200)
         .json({ success: true, message: "Payment verified successfully" });

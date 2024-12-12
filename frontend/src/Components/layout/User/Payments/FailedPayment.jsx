@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
+
 const FailedPayment = () => {
 
   const navigate = useNavigate()
@@ -32,11 +33,17 @@ const FailedPayment = () => {
       Oops! Order is placed. Your payment could not be processed.
     </p>
     <div className="mt-6 flex gap-4 justify-center">
-      <button
+      {/* <button
         onClick={() => console.log("Retry Payment")}
         className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-200"
       >
         Retry Payment
+      </button> */}
+       <button
+        onClick={() => navigate('/shop')}
+        className="px-6 py-2 bg-black text-white font-semibold rounded-lg hover:bg-grey-700 transition duration-200"
+      >
+        Continue
       </button>
       <button
         onClick={() => navigate('/account/orders')}

@@ -230,9 +230,10 @@ const NewOrderPayment = () => {
       const response = await FailedOrder({
         cartSave,
         paymentMethod:'razorpay',
+        paymentStatus: 'Pending',
+        address_id: selectedAddress._id,
         totalPrice,
         couponDiscount,
-        paymentStatus: 'Pending'
 
 
       })
@@ -351,14 +352,15 @@ const NewOrderPayment = () => {
                   </label>
                 </div>
                 {/* New COD option */}
-                <div className="flex items-center space-x-2 border rounded-lg p-3">
+
+              { totalPrice < 1000 &&  <div className="flex items-center space-x-2 border rounded-lg p-3">
                   <Radio 
                   onClick={handleCartSave}
                   value="cod" id="cod" className="mr-2" />
                   <label htmlFor="cod" className="flex-1 text-sm">
                     Cash on Delivery (COD)
                   </label>
-                </div>
+                </div>}
               </RadioGroup>
             </CardContent>
           </Card>

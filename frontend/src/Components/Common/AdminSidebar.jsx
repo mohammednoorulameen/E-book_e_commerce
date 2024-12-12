@@ -10,12 +10,14 @@ import {
   FaDesktop,
   FaCreditCard,
   FaBook,
-} from "react-icons/fa";
+  FaChartBar
+} from "react-icons/fa";   
 import { useLocation, useNavigate } from "react-router-dom";
 import { List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 
 const sidebarItems = [
   { name: "Dashboard", icon: FaThLarge, path: "/admin/dashboard" },
+  { name: "Sales Report", icon: FaChartBar, path: "/admin/sales-report" },
   { name: "Products", icon: FaList, path: "/admin/products" },
   { name: "Users", icon: FaUsers, path: "/admin/users" },
   { name: "Categories", icon: FaCalendar, path: "/admin/category" },

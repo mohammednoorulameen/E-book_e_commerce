@@ -21,6 +21,9 @@ import {
 import {
   ListOrderDetailes,
   changeOrderStatus,
+  GetTopTenProducts,
+  TopCategory,
+  GraphData
 } from "../Controllers/Admin/OrderController.js";
 import { AdminVerifyToken } from "../Middlewares/VerifyToken.js";
 import {
@@ -43,8 +46,11 @@ adminRouter.get("/adminlist-Products", ListProduct);
 adminRouter.get("/get-edit-product", GetEditProduct);
 adminRouter.get("/get-orders-list", ListOrderDetailes);
 adminRouter.get("/get-coupon-list", getCouponList);
-adminRouter.get("/get-offer-list", ListOffer)
-adminRouter.get("/get-sales-report", GetSalesReport)
+adminRouter.get("/get-offer-list", ListOffer);
+adminRouter.get("/get-sales-report", GetSalesReport);
+adminRouter.get("/get-top-products", GetTopTenProducts);
+adminRouter.get("/get-top-category", TopCategory);
+adminRouter.get('/get-graph-data', GraphData)
 
 /*
 POST

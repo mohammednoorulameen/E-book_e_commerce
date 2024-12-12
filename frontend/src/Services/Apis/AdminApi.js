@@ -251,17 +251,37 @@ export const adminApi = createApi({
      * sales report
      */
 
-  
-    // GetSalesReport: builder.query({
-    //   query: ({ sortBy, startDate, endDate, page,limit }) =>
-    //     `/get-sales-report?page=${page}$limit=${limit}$sortBy=${sortBy}&startDate=${startDate}&endDate=${endDate}`,
-    //   providesTags: ['getSalesReport'],
-    // }),
+
     GetSalesReport: builder.query({
       query: ({ sortBy, startDate, endDate, page, limit }) =>
         `/get-sales-report?page=${page}&limit=${limit}&sortBy=${sortBy}&startDate=${startDate}&endDate=${endDate}`,
       providesTags: ['getSalesReport'],
     }),
+
+    /**
+     * get top  products
+     */
+
+    GetTopProducts: builder.query({
+      query: ()=> '/get-top-products'
+    }),
+    
+    /**
+     * get top category
+     */
+
+    GetTopCategory: builder.query({
+      query: () => '/get-top-category'
+    }),
+
+    /**
+     * get graph data
+     */
+
+    GetGraphData : builder.query({
+      query: ({period}) => `/get-graph-data?period=${period}`
+    })
+    
     
     // ---------------
   }),
@@ -289,4 +309,8 @@ export const {
   useGetOfferQuery,
   useBlockfferMutation,
   useGetSalesReportQuery,
+  useGetTopProductsQuery,
+  useGetTopCategoryQuery,
+  useGetGraphDataQuery,
+
 } = adminApi;

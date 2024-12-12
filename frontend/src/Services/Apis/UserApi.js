@@ -355,13 +355,29 @@ export const userApi = createApi({
         invalidatesTags:['getCartItems', 'getOders', 'getProductsDetails']
     }),
 
+    /**
+     * retrying payment 
+     */
+
     RetryingPayment: builder.mutation({
         query:(items)=>({
             url:'/user/retry-payment',
             method: 'POST',
             body: items
         })
-    })
+    }),
+
+    /**
+     * verifying retrying payment 
+     */
+
+    VerifyRetry: builder.mutation({
+        query:(items)=>({
+            url: '/user/verify-retry',
+            method: 'POST',
+            body: items
+        })
+    }),
 
 
 // ----------
@@ -399,6 +415,6 @@ useAddWalletMutation,
 useGetWalletQuery,
 useFailedOrderMutation,
 useRetryingPaymentMutation,
-
+useVerifyRetryMutation
 
 } = userApi

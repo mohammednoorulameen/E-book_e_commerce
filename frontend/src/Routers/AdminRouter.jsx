@@ -1,6 +1,6 @@
 import React from 'react'
 import AdminLoginPage from '../Pages/Admin/AdminLoginPage'
-import AdminDashboardPage from '../Pages/Admin/AdminDashboardPage'
+import AdminSalesReportPage from '../Pages/Admin/AdminSalesReportPage'
 import AdminLayout from '../Components/layout/Admin/AdminLayout/AdminLayout'
 import AdminProductsPage from '../Pages/Admin/AdminProductsPage'
 import AdminUsersPage from '../Pages/Admin/AdminUsersPage'
@@ -12,6 +12,7 @@ import AdminPrivate from '../Utils/Protector/AdminPrivate'
 import { AdminOdersPage, AdminOrdersDetailesPage } from '../Pages/Admin/AdminOdersPage'
 import {AdminCouponsPage,AdminAddCouponsPage} from '../Pages/Admin/AdminCouponsPage'
 import {AdminOffersPage, AdminAddOffersPage} from '../Pages/Admin/AdminOffersPage'
+import AdminDashboardPage from '../Pages/Admin/AdminDashboardPage'
 
 
 const adminRoutes=[
@@ -31,9 +32,15 @@ const adminRoutes=[
     </AdminPrivate>, 
 
     children:[
+
       {
         path: 'dashboard',
         element: <AdminDashboardPage/>
+      },
+
+      {
+        path: 'sales-report',
+        element: <AdminSalesReportPage/>
       },
 
       {
