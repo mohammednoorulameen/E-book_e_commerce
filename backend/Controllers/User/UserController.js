@@ -334,7 +334,16 @@ const ChangePassword = async (req, res) => {
       return res.status(404).json({ message: "updating password failed" });
     }
     const user = await User.findById(id);
+    if (currentPassword) {
+      
+    }
     const verifyPassword = await bcrypt.compare(currentPassword, user.password);
+
+    const isSamePassword = await bcrypt.compare(password, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "New password cannot be the same as the current password" });
+    }
+    
     if (verifyPassword) {
       const hashedPassword = await HashPassword(password);
       await User.findByIdAndUpdate(id, { password: hashedPassword });

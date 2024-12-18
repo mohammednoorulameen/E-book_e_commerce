@@ -19,7 +19,8 @@ import {
   Legend,
 } from "chart.js";
 
-// Register necessary parts of Chart.js
+import { utils, writeFile } from 'xlsx';
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -62,6 +63,7 @@ const AdminSalesReport = () => {
   const [datePicker, setDatePicker] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [SalesItems, setSalesItems] = useState([]);
+  const [Download, setDownload ] = useState(true)
   const { data } = useGetSalesReportQuery({
     sortBy,
     startDate,
@@ -73,6 +75,15 @@ const AdminSalesReport = () => {
     page: 1,
     limit: 10,
   });
+
+  /**
+   * check salesItems data then download pdf 
+   */
+
+  useEffect(() => {
+    setDownload(SalesItems.length > 0);
+  }, [SalesItems]);
+
 
   /**
    *  handle change page and take totalPage
@@ -96,6 +107,7 @@ const AdminSalesReport = () => {
         user: salesData.userDetails?.email || "Unknown User",
         date: new Date(salesData.items?.itemCreatedAt).toDateString(),
         paymentStatus: salesData.items?.payment_status,
+        couponDiscount: salesData.items?.discount
       }));
 
       // setSalesItems(transformedItems);
@@ -107,7 +119,7 @@ const AdminSalesReport = () => {
         0
       );
 
-      /**
+      /** 
        * calculate revenue
        */
 
@@ -139,6 +151,8 @@ const AdminSalesReport = () => {
         user: salesData.userDetails?.email || "Unknown User",
         date: new Date(salesData.items?.itemCreatedAt).toDateString(),
         paymentStatus: salesData.items?.payment_status,
+        couponDiscount: salesData.items?.discount
+
       }));
       setSalesItems(transformedItems);
     }
@@ -174,6 +188,20 @@ const AdminSalesReport = () => {
     ],
   };
 
+
+/**
+ * coupon discound
+ */
+  
+//   const productDiscount = SalesItems.reduce(
+//     (acc, item) => acc + ((item.couponDiscount || 0) / 100 * item.price),
+//     0
+//   );
+
+
+
+// console.log("Order Price Check:",productDiscount);
+
   // Chart options
   const chartOptions = {
     responsive: true,
@@ -208,6 +236,48 @@ const AdminSalesReport = () => {
   };
 
   /**
+   * handle excel
+   */
+
+  const HandledownloadExcel = () => {
+    const dateRangeText = getDateRangeText();
+    const tableData = formatTableData();
+    const formattedTableData = [
+      [`${dateRangeText}`], 
+      headers.map(header => header.name), 
+      ...tableData 
+    ];
+    const worksheet = utils.aoa_to_sheet(formattedTableData); 
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, 'Sales Report');
+    writeFile(workbook, 'sales_report.xlsx');
+  };
+
+  const getDateRangeText = () => {
+    if (sortBy === 'daily') {
+      return `Date Range: ${moment().format('DD/MM/YYYY')}`;
+    } else if (sortBy === 'weekly') {
+      return `Date Range: ${moment().subtract(7, 'days').format('DD/MM/YYYY')} - ${moment().format('DD/MM/YYYY')}`;
+    } else if (sortBy === 'yearly') {
+      return `Date Range: ${moment().subtract(1, 'year').format('DD/MM/YYYY')} - ${moment().format('DD/MM/YYYY')}`;
+    } else if (sortBy === 'customDate') {
+      return `Date Range: ${startDate} - ${endDate}`;
+    }
+  };
+  const formatTableData = () => {
+    return salesReport.map((list) =>
+      headers.map((header) => {
+        return header.key === 'items.itemCreatedAt'
+          ? moment(get(list, header.key)).format('DD/MM/YYYY')
+          : header.key === 'items.payment_id'
+          ? list.items.payment_id ? 'Razorpay' : 'COD'
+          : get(list, header.key, 'N/A');
+      })
+    );
+  };
+  
+
+  /**
    * handle pdf
    */
 
@@ -218,6 +288,7 @@ const AdminSalesReport = () => {
     { name: "Payment Status", key: "items.payment_status" },
     { name: "Payment ID", key: "items.payment_id" },
   ];
+
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
@@ -365,22 +436,18 @@ const AdminSalesReport = () => {
         <DashboardWidget
           icon={<FaDollarSign />}
           title="Revenue"
-          value={`$${revenue}`}
+          value={`₹${revenue}`}
           color="text-yellow-500"
         />
         <DashboardWidget
           icon={<FaChartLine />}
           title="Total Sales"
-          value={`$${totalSales}`}
+          value={`₹${totalSales}`}
           color="text-purple-500"
         />
-        {/* <DashboardWidget
-        icon={<FaChartLine />}
-        title="Total Sales"
-        value={`$${totalDiscount}`}
-        color="text-purple-500"
-      /> */}
       </div>
+
+    
 
       <div className="bg-white shadow rounded-lg p-6 mb-8">
         <h3 className="text-xl font-semibold mb-4">Recent Orders</h3>
@@ -390,6 +457,8 @@ const AdminSalesReport = () => {
               <th className="p-2 text-gray-600">Order Name</th>
               <th className="p-2 text-gray-600">Date</th>
               <th className="p-2 text-gray-600">Quantity</th>
+              {/* <th className="p-2 text-gray-600">Offer</th> */}
+              <th className="p-2 text-gray-600">Coupon</th>
               <th className="p-2 text-gray-600">Customer</th>
               <th className="p-2 text-gray-600">Amount</th>
               <th className="p-2 text-gray-600">Payment Status</th>
@@ -401,6 +470,8 @@ const AdminSalesReport = () => {
                 <td className="p-2">{salesItem.name}</td>
                 <td className="p-2">{salesItem.date}</td>
                 <td className="p-2">{salesItem.quantity}</td>
+                {/* <td className="p-2">{salesItem.quantity}</td> */}
+                <td className="p-2">{salesItem.couponDiscount}</td>
                 <td className="p-2">{salesItem.user}</td>
                 <td className="p-2">{salesItem.price}</td>
                 <td className="p-2">
@@ -425,6 +496,8 @@ const AdminSalesReport = () => {
         totalPage={totalPage}
         onPageChannge={handlePageChange}
       />
+
+  
       </div>
 
       {/* Sales Chart Placeholder */}
@@ -442,14 +515,21 @@ const AdminSalesReport = () => {
       </div>
     
       {/* Download Button */}
-      <div className="mt-auto flex justify-center">
+    { Download && <div className="mt-auto flex justify-center">
         <button
           onClick={handleDownloadPDF}
           className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600"
         >
-          Download Report
+          Download Report PDF
         </button>
-      </div>
+        <button
+          onClick={HandledownloadExcel}
+          className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600"
+        >
+          Download Report Excel
+        </button>
+      </div>}
+
     </div>
   );
 };
@@ -477,121 +557,3 @@ const Pagination = ({ currentPage, totalPage, onPageChannge }) => {
 };
 
 export default AdminSalesReport;
-
-// import React from 'react';
-// import { FaShoppingCart, FaUsers, FaDollarSign, FaChartLine } from 'react-icons/fa';
-
-// const StatsCard = ({ icon: Icon, title, value, textColor }) => (
-//   <div className="bg-white p-6 rounded-lg shadow-sm">
-//     <div className="flex items-center gap-4">
-//       <div className="text-gray-600">
-//         <Icon size={24} />
-//       </div>
-//       <div>
-//         <h3 className="text-sm text-gray-600">{title}</h3>
-//         <p className={`text-xl font-semibold ${textColor || 'text-gray-900'}`}>{value}</p>
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// const StatusBadge = ({ status }) => {
-//   const getStatusStyles = () => {
-//     switch (status.toLowerCase()) {
-//       case 'pending':
-//         return 'bg-yellow-100 text-yellow-800';
-//       case 'completed':
-//         return 'bg-green-100 text-green-800';
-//       case 'shipped':
-//         return 'bg-blue-100 text-blue-800';
-//       default:
-//         return 'bg-gray-100 text-gray-800';
-//     }
-//   };
-
-//   return (
-//     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyles()}`}>
-//       {status}
-//     </span>
-//   );
-// };
-
-// const Dashboard = () => {
-//   const recentOrders = [
-//     { id: 'ORD1234', date: '2024-10-01', customer: 'John Doe', amount: '$120', status: 'Pending' },
-//     { id: 'ORD1235', date: '2024-10-02', customer: 'Jane Smith', amount: '$200', status: 'Completed' },
-//     { id: 'ORD1236', date: '2024-10-03', customer: 'Alice Brown', amount: '$150', status: 'Shipped' },
-//   ];
-
-//   return (
-//     <main className="flex-1 p-6">
-//       <h2 className="text-2xl font-bold mb-6">Admin Dashboard</h2>
-
-//       {/* Stats Grid */}
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-//         <StatsCard
-//           icon={FaShoppingCart}
-//           title="Total Orders"
-//           value="1,235"
-//         />
-//         <StatsCard
-//           icon={FaUsers}
-//           title="Total Users"
-//           value="8,192"
-//         />
-//         <StatsCard
-//           icon={FaDollarSign}
-//           title="Revenue"
-//           value="$24,300"
-//         />
-//         <StatsCard
-//           icon={FaChartLine}
-//           title="Sales Growth"
-//           value="+12%"
-//           textColor="text-green-600"
-//         />
-//       </div>
-
-//       {/* Recent Orders */}
-//       <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-//         <h3 className="text-lg font-semibold mb-4">Recent Orders</h3>
-//         <div className="overflow-x-auto">
-//           <table className="w-full">
-//             <thead>
-//               <tr className="text-left text-gray-600 border-b">
-//                 <th className="pb-3">Order ID</th>
-//                 <th className="pb-3">Date</th>
-//                 <th className="pb-3">Customer</th>
-//                 <th className="pb-3">Amount</th>
-//                 <th className="pb-3">Status</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {recentOrders.map((order) => (
-//                 <tr key={order.id} className="border-b last:border-b-0">
-//                   <td className="py-4">{order.id}</td>
-//                   <td className="py-4">{order.date}</td>
-//                   <td className="py-4">{order.customer}</td>
-//                   <td className="py-4">{order.amount}</td>
-//                   <td className="py-4">
-//                     <StatusBadge status={order.status} />
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-
-//       {/* Sales Overview */}
-//       <div className="bg-white rounded-lg shadow-sm p-6">
-//         <h3 className="text-lg font-semibold mb-4">Sales Overview</h3>
-//         <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-//           <span className="text-gray-500">Sales chart goes here</span>
-//         </div>
-//       </div>
-//     </main>
-//   );
-// };
-
-// export default Dashboard;

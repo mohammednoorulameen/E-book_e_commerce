@@ -68,10 +68,6 @@ export const userApi = createApi({
      * product pagination
      */
 
-    // getProducts: builder.query({
-    //     query:({page,limit,category,sort})=>`/user/list-Products?page=${page}$limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
-    //     providesTags:['getProducts']
-    //   }),
     getProducts: builder.query({
         query: ({ page, limit, category, sort }) =>
           `/user/list-Products?page=${page}&limit=${limit}&category=${category || ""}&sort=${sort || ""}`,
@@ -379,6 +375,24 @@ export const userApi = createApi({
         })
     }),
 
+    /**
+     * user home page geting top ten products
+     */
+
+    GetTopProducts: builder.query({
+        query: ()=> '/user/get-top-products'
+    }),
+
+    /**
+     * user home page geting top ten Categories
+     */
+
+    GetTopCategory: builder.query({
+        query: ()=> '/user/get-top-category'
+    }),
+
+
+
 
 // ----------
     })
@@ -415,6 +429,7 @@ useAddWalletMutation,
 useGetWalletQuery,
 useFailedOrderMutation,
 useRetryingPaymentMutation,
-useVerifyRetryMutation
-
+useVerifyRetryMutation,
+useGetTopProductsQuery,
+useGetTopCategoryQuery,
 } = userApi

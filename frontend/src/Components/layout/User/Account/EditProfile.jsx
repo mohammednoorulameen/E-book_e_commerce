@@ -8,11 +8,13 @@ import { useEditUserInfoMutation } from '../../../../Services/Apis/UserApi'
 const validationSchema = Yup.object().shape({
   username: Yup.string()
     .required("Name is required")
+    .matches(/.*\S.*/, "Username cannot be just spaces")
     .min(4, "Username must be at least 4 characters")
     .max(15, "Username cannot be more than 15 characters"),
   email: Yup.string()
     .email("Invalid email format")
-    .required("Email is required"),
+    .required("Email is required")
+    .matches(/.*\S.*/, "Email cannot be just spaces"), 
   phone: Yup.string()
     .required("Phone number is required")
     .matches(/^\d{10,11}$/, "Enter a valid phone number"), 
@@ -90,14 +92,14 @@ const EditProfile = () => {
         )}
             </div>
             <div>
-              <label
+              {/* <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700"
               >
                 Email
-              </label>
+              </label> */}
               <div className="mt-1">
-                <TextField
+                {/* <TextField
                   id="email"
                   type="text"
                   name="email"
@@ -106,7 +108,7 @@ const EditProfile = () => {
                   onBlur={formik.handleBlur}
                   variant="outlined"
                   fullWidth
-                />
+                /> */}
               </div>
               {formik.touched.email && formik.errors.email && (
           <div className="text-red-600">{formik.errors.email}</div>

@@ -32,13 +32,15 @@ const NewOrderPayment = () => {
   const [VerifyPayment] = useVerifyPaymentMutation();
   const [FailedOrder] = useFailedOrderMutation();
 
-  const totalPrice =
-    cartItems[0]?.totalPrice -
-    (couponDiscount / 100) * cartItems[0]?.totalPrice;
-  const totalDiscount = totalPrice - cartItems[0]?.totalPrice;
   const coupons = data?.coupons;
 
-
+  const calculateTotal = () => {
+    return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  };
+  const originalTotalPrice = calculateTotal();
+  const totalPrice =
+    originalTotalPrice - (couponDiscount / 100) * originalTotalPrice;
+  const totalDiscount = totalPrice - cartItems[0]?.totalPrice;
 
   useEffect(() => {
     if (addressesData?.addresses) {
@@ -48,27 +50,31 @@ const NewOrderPayment = () => {
       setSelectedAddress(selected || null);
     }
 
+    console.log("check cartItems", totalPrice);
+
+    
+    
     if (cart) {
-
-      const transformedItems = cart.cartItems.map((cartItem) => ({
-        id: cartItem.productDetailes._id,
-        name: cartItem.productDetailes.productName,
-        price: parseFloat(cartItem.items.price),
-        stock: cartItem.productDetailes.stock,
-        quantity: cartItem.items.quantity,
-        totalPrice: cartItem.totalPrice,
-      }));
-      setCartItems(transformedItems);
+      const filteredItems = cart.cartItems.filter((item)=> item.productDetailes.stock > 0)
+      if (filteredItems.length > 0) {
+        
+        const transformedItems = filteredItems.map((cartItem) => ({
+          id: cartItem.productDetailes._id,
+          name: cartItem.productDetailes.productName,
+          price: parseFloat(cartItem.items.price),
+          stock: cartItem.productDetailes.stock,
+          quantity: cartItem.items.quantity,
+          totalPrice: cartItem.totalPrice,
+        }));
+        setCartItems(transformedItems);
+      }
     }
-  }, [addressesData,cartSaveAddress, cart]);
-
-
-
+  }, [addressesData, cartSaveAddress, cart]);
 
   // Calculate the total price of the cart
-  const calculateTotalPrice = () => {
-    return cartItems.reduce((acc, item) => item.totalPrice, 0);
-  };
+  // const calculateTotalPrice = () => {
+  //   return cartItems.reduce((acc, item) => item.totalPrice, 0);
+  // };
 
   /**
    * handle HandleOrder
@@ -79,12 +85,10 @@ const NewOrderPayment = () => {
     setPaymentMethod(selectedValue);
   };
 
-
-
-   /**
+  /**
    * Load Razorpay script
    */
-   const loadRazorpayScript = () => {
+  const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -117,7 +121,7 @@ const NewOrderPayment = () => {
         const { id: order_id, amount, currency } = response.data.order;
 
         const options = {
-          key: "rzp_test_bzGh9EH7vBB8Yh", 
+          key: "rzp_test_bzGh9EH7vBB8Yh",
           amount,
           currency,
           name: "Ebook",
@@ -134,7 +138,7 @@ const NewOrderPayment = () => {
                 cartSave,
                 address_id: selectedAddress._id,
                 couponDiscount,
-                paymentMethod: "razorpay"
+                paymentMethod: "razorpay",
               });
 
               if (verificationResponse?.data?.success) {
@@ -151,7 +155,7 @@ const NewOrderPayment = () => {
           },
           prefill: {
             name: selectedAddress?.name || "Customer",
-            email: "customer@example.com", 
+            email: "customer@example.com",
             contact: selectedAddress?.phone || "1234567890",
           },
           notes: {
@@ -165,11 +169,10 @@ const NewOrderPayment = () => {
         const paymentObject = new window.Razorpay(options);
         paymentObject.open();
 
-        paymentObject.on('payment.failed', function (response){
-          handlePaymentFailed(cartSave,couponDiscount)
-          console.log('payment failed', response);
-        })
-
+        paymentObject.on("payment.failed", function (response) {
+          handlePaymentFailed(cartSave, couponDiscount);
+          console.log("payment failed", response);
+        });
       } else {
         alert("Failed to initialize payment. Please try again.");
       }
@@ -179,25 +182,26 @@ const NewOrderPayment = () => {
     }
   };
 
-
-
   /**
-   * handle set cartsave 
+   * handle set cartsave
    */
+console.log('cartItems', cartItems)
+console.log('cartSave', cartSave)
 
-  const handleCartSave = () =>{
+  const handleCartSave = () => {
     const newCartSave = cartItems.map((cartItem) => ({
       product_id: cartItem.id,
       quantity: cartItem.quantity,
       price: cartItem.price,
+      totalPrice: cartItem.totalPrice
     }));
     setCartSave(newCartSave);
-  }
+  };
 
   /**
    * Handle order placement
    */
-  console.log('cartSave', cartSave)
+  console.log("cartSave", cartSave);
   const HandleOrder = () => {
     if (paymentMethod === "razorpay") {
       handleRazorpayPayment();
@@ -220,44 +224,37 @@ const NewOrderPayment = () => {
     }
   };
 
-
   /**
    * handle Pending order
    */
 
-  const handlePaymentFailed = async (cartSave,couponDiscount)=> {
+  const handlePaymentFailed = async (cartSave, couponDiscount) => {
     try {
       const response = await FailedOrder({
         cartSave,
-        paymentMethod:'razorpay',
-        paymentStatus: 'Pending',
+        paymentMethod: "razorpay",
+        paymentStatus: "Pending",
         address_id: selectedAddress._id,
         totalPrice,
         couponDiscount,
-
-
-      })
+      });
 
       if (response.data) {
-        alert('order placed successfully but payment is pending!!')
-        const razorpayModal = document.querySelector('.razorpay-container');
+        alert("order placed successfully but payment is pending!!");
+        const razorpayModal = document.querySelector(".razorpay-container");
         if (razorpayModal) {
-          razorpayModal.remove()
-          navigate('/payment-failed')
-        }else{
+          razorpayModal.remove();
+          navigate("/payment-failed");
+        } else {
           console.log("razorpay modal not fount ");
-          
         }
-      }else{
-        alert(" failed place order try again")
+      } else {
+        alert(" failed place order try again");
       }
     } catch (error) {
       console.log(error);
-      
     }
-  }
-
-
+  };
 
   /**
    * apply coupon
@@ -353,14 +350,19 @@ const NewOrderPayment = () => {
                 </div>
                 {/* New COD option */}
 
-              { totalPrice < 1000 &&  <div className="flex items-center space-x-2 border rounded-lg p-3">
-                  <Radio 
-                  onClick={handleCartSave}
-                  value="cod" id="cod" className="mr-2" />
-                  <label htmlFor="cod" className="flex-1 text-sm">
-                    Cash on Delivery (COD)
-                  </label>
-                </div>}
+                {totalPrice < 1000 && (
+                  <div className="flex items-center space-x-2 border rounded-lg p-3">
+                    <Radio
+                      onClick={handleCartSave}
+                      value="cod"
+                      id="cod"
+                      className="mr-2"
+                    />
+                    <label htmlFor="cod" className="flex-1 text-sm">
+                      Cash on Delivery (COD)
+                    </label>
+                  </div>
+                )}
               </RadioGroup>
             </CardContent>
           </Card>
@@ -459,7 +461,7 @@ const NewOrderPayment = () => {
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
                     <span className={`${appliedCoupon ? "line-through" : ""}`}>
-                      ₹{calculateTotalPrice()}.00
+                      {/* ₹{calculateTotalPrice()}.00 */}₹{calculateTotal()}.00
                     </span>
                   </div>
 
@@ -489,14 +491,15 @@ const NewOrderPayment = () => {
                   <div className="flex justify-between font-semibold text-sm">
                     <span>Total</span>
                     <span>
-                      ₹{appliedCoupon ? totalPrice : calculateTotalPrice()}.00
+                      {/* ₹{appliedCoupon ? totalPrice : calculateTotalPrice()}.00 */}
+                      ₹{appliedCoupon ? totalPrice : calculateTotal()}.00
                     </span>
                     {/* <span>₹{calculateTotalPrice()}.00</span> */}
                   </div>
                 </div>
 
                 <Button
-                  onClick={ HandleOrder}
+                  onClick={HandleOrder}
                   className="w-full text-white"
                   sx={{
                     backgroundColor: "#000",

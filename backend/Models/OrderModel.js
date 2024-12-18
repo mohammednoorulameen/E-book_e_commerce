@@ -53,6 +53,10 @@ const orderSchema = mongoose.Schema(
         type: String,
       },
 
+      ReturnReason :{
+        type: String
+      },
+
       discount:{
           type:Number
       },

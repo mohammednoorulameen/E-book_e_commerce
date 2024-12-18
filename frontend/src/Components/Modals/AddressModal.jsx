@@ -6,24 +6,87 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 Modal.setAppElement("#root");
 
+// const validationSchema = Yup.object().shape({
+//   name: Yup.string().required("Name is required"),
+//   phone: Yup.string()
+//     .required("Phone number is required")
+//     .matches(/^\d{10,11}$/, "Enter a valid phone number"),
+//   pincode: Yup.string()
+//     .required("Pincode is required")
+//     .matches(/^\d{6}$/, "Enter valid pincode."),
+//   locality: Yup.string().required("Locality is required"),
+//   address: Yup.string().required("Address is required"),
+//   city: Yup.string().required("City is required"),
+//   state: Yup.string().required("State is required"),
+//   landmark: Yup.string().required("Landmark is required"),
+//   altPhone: Yup.string()
+//     .required("Alternative phone number is required")
+//     .matches(/^\d{10,11}$/, "Enter a valid phone number"),
+//   addressType: Yup.string().required("Select an address type"),
+// });
+
+
 const validationSchema = Yup.object().shape({
-  name: Yup.string().required("Name is required"),
+  name: Yup.string()
+    .required("Name is required")
+    .test(
+      "not-only-spaces",
+      "Name cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
   phone: Yup.string()
     .required("Phone number is required")
     .matches(/^\d{10,11}$/, "Enter a valid phone number"),
   pincode: Yup.string()
     .required("Pincode is required")
     .matches(/^\d{6}$/, "Enter valid pincode."),
-  locality: Yup.string().required("Locality is required"),
-  address: Yup.string().required("Address is required"),
-  city: Yup.string().required("City is required"),
-  state: Yup.string().required("State is required"),
-  landmark: Yup.string().required("Landmark is required"),
+  locality: Yup.string()
+    .required("Locality is required")
+    .test(
+      "not-only-spaces",
+      "Locality cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
+  address: Yup.string()
+    .required("Address is required")
+    .test(
+      "not-only-spaces",
+      "Address cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
+  city: Yup.string()
+    .required("City is required")
+    .test(
+      "not-only-spaces",
+      "City cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
+  state: Yup.string()
+    .required("State is required")
+    .test(
+      "not-only-spaces",
+      "State cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
+  landmark: Yup.string()
+    .required("Landmark is required")
+    .test(
+      "not-only-spaces",
+      "Landmark cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
   altPhone: Yup.string()
     .required("Alternative phone number is required")
     .matches(/^\d{10,11}$/, "Enter a valid phone number"),
-  addressType: Yup.string().required("Select an address type"),
+  addressType: Yup.string()
+    .required("Select an address type")
+    .test(
+      "not-only-spaces",
+      "Address type cannot contain only spaces",
+      (value) => value && value.trim().length > 0
+    ),
 });
+
 
 /**
  * delete address

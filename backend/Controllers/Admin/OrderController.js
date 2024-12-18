@@ -7,36 +7,78 @@ import mongoose from "mongoose";
  *  getting order deatailes
  */
 
+
 const ListOrderDetailes = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 4;
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
     const skip = (page - 1) * limit;
+
+    // Calculate total products count
     const totalDetails = await Orders.aggregate([
-      { $match: {} },
       { $unwind: "$items" },
       { $count: "totalCount" },
     ]);
 
-    const totalProducts =
-      totalDetails.length > 0 ? totalDetails[0].totalCount : 0;
-    const totalPage = Math.ceil(totalProducts / limit);
-    const currentPage = page;
-    const orderItems = await Orders.find({})
-      .populate("user_id")
-      .populate("address_id")
-      .populate("items.product_id")
-      .skip(skip)
-      .limit(limit);
+    const totalProducts = totalDetails.length > 0 ? totalDetails[0].totalCount : 0;
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Fetch paginated order items
+    const orderItems = await Orders.aggregate([
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+
+      { $sort: { "items.itemCreatedAt": -1 } }, 
+      {
+        $project: {
+          _id: 0,
+          "items.quantity": 1,
+          "items.price": 1,
+          "items.orderStatus": 1,
+          "items.payment_status":1,
+          "items._id": 1,
+          "productDetails._id": 1,
+          "productDetails.productName": 1,
+          "productDetails.carat": 1,
+          "productDetails.category": 1,
+          "productDetails.origin": 1,
+          "productDetails.images": 1,
+          "userDetails.firstName": 1,
+          "userDetails.email": 1,
+          "userDetails._id": 1,
+          "userAddress.name": 1
+        },
+      },
+      { $skip: skip }, 
+      { $limit: limit }, 
+    ]);
+
     res.status(200).json({
       message: "Orders retrieved successfully",
       orderItems,
-      totalPage,
-      currentPage,
+      totalPage: totalPages,
+      currentPage: page,
       totalProducts,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error retrieving orders:", error);
     res.status(500).json({
       message: "Failed to retrieve orders",
       error: error.message,
@@ -44,12 +86,17 @@ const ListOrderDetailes = async (req, res) => {
   }
 };
 
+
+
 /**
  * change order status
  */
 
 const changeOrderStatus = async (req, res) => {
   const { user_id, order_id, action } = req.body;
+  console.log('user_id', user_id, )
+  console.log(' order_id, ', order_id)
+  console.log(' action', action)
   if (!user_id || !order_id || !action) {
     return res.status(400).json({ message: "Invalid input data" });
   }
@@ -168,56 +215,6 @@ const TopCategory = async (req, res) => {
 /**
  * get graph data
  */
-
-// const GraphData = async (req, res) => {
-//   try {
-//     const { period } = req.query;
-//     let DateFormat;
-//     console.log("checkkc");
-//     switch (period) {
-//       case "daily":
-//         DateFormat = "%Y-%m-%d";
-//         break;
-//       case "monthly":
-//         DateFormat = "%Y-%m";
-//         break;
-//       case "yearly":
-//         DateFormat = "%Y";
-//         break;
-//       default:
-//         DateFormat = "%Y-%m-%d";
-//     }
-//     console.log("DateFormat", DateFormat);
-
-//     const salesData = await Orders.aggregate([
-//       { $unwind: "$items" },
-//       {
-//         $group: {
-//           _id: {
-//             $dateToString: { format: DateFormat, date: "$items.itemCreatedAt" },
-//           },
-//           totalSales: { $sum: "$items.payableAmount" },
-//         },
-//       },
-//       { $sort: { _id: -1 } },
-//       { $limit: 7 },
-//       { $sort: { _id: 1 } },
-//       {
-//         $project: {
-//           _id: 0,
-//           name: "$_id",
-//           value: "$totalSales",
-//         },
-//       },
-//     ]);
-
-//     console.log("salesData", salesData);
-//     res.status(200).json({ message: "Graph data success", salesData });
-//   } catch (error) {
-//     console.error("Error fetching graph data:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
 
 
 const GraphData = async (req, res) => {

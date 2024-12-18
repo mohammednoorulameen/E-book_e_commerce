@@ -8,13 +8,15 @@ import {
   useCancelOrderMutation,
   useRetryingPaymentMutation,
   useVerifyRetryMutation,
+  useAddWalletMutation,
 } from "../../../../Services/Apis/UserApi";
 import { OrderCancelModal, OrderReturnModal } from "../../../Modals/OrderModal";
 
 const OrderHistory = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  // const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [AddWallet] = useAddWalletMutation()
+  const [cartSave, setCartSave] = useState([]);
   const [isOrderCancelModalOpen, setisOrderCancelModalOpen] = useState(false);
   const [isOrderReturnModalOpen, setisOrderReturnModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -29,7 +31,8 @@ const OrderHistory = () => {
 
   const totalPage = data?.totalPage || 1;
 
-  console.log("check latest data", data);
+
+  console.log('data?.orderItems', data)
 
   useEffect(() => {
     if (data?.orderItems) {
@@ -37,6 +40,7 @@ const OrderHistory = () => {
         order.items.map((item) => ({
           productId: item.product_id[0]._id,
           orderId: order._id,
+          userId: order.user_id,
           orderItemId: item._id,
           orderDate: new Date(item.itemCreatedAt).toLocaleDateString(),
           // totalItems: order.items.length,
@@ -44,6 +48,7 @@ const OrderHistory = () => {
           payment_Method: item.payment_Method || "N/A",
           payment_status: item.payment_status || "N/A",
           status: item.orderStatus || "N/A",
+          discount: item.discount || "NA",
           address: `${order.address_id[0]?.address || "N/A"}, ${
             order.address_id[0]?.city || "N/A"
           }, ${order.address_id[0]?.state || "N/A"}, ${
@@ -53,11 +58,16 @@ const OrderHistory = () => {
           }`,
           address_id: order.address_id[0]?._id,
           productName: item.product_id[0]?.productName || "N/A",
+          stock: item.product_id[0]?.stock || "N/A",
+          price: item.product_id[0]?.price || "N/A",
           category: item.product_id[0]?.category || "N/A",
           quantity: item.quantity,
+          payment_id: item.payment_id || "NA"
+
         }))
       );
 
+      
       // Sorting orderdata based on `orderDate` in descending order
       const sortedOrderData = orderdata.sort(
         (a, b) => new Date(b.orderDate) - new Date(a.orderDate)
@@ -66,6 +76,25 @@ const OrderHistory = () => {
       setOderData(sortedOrderData); // Setting sorted data
     }
   }, [data]);
+
+  /**
+   * cartsave products
+   */
+
+  const HandleCartsave = (productId, quantity, price) => {
+    console.log('productId, quantity, price', productId, quantity, price)
+    const newCartSave = {
+      product_id: productId,
+      quantity: quantity,
+      price: price,
+      // totalPrice: item.totalPrice
+    };
+    setCartSave(newCartSave);
+
+  }
+
+
+  console.log('check cartSave', cartSave)
 
   /**
    * handle page change
@@ -104,7 +133,9 @@ const OrderHistory = () => {
   const handleCancelOrder = async () => {
     if (!selectedOrder) return;
 
-    const { product_id, quantity, order_id } = selectedOrder;
+    console.log('selectedOrder', selectedOrder)
+    const { product_id, quantity, order_id , productName, payment_id, amount } = selectedOrder;
+    console.log('productName, payment_id, amount', productName, payment_id, amount)
 
     const response = await CancelOrder({
       product_id,
@@ -112,8 +143,11 @@ const OrderHistory = () => {
       order_id,
     });
     if (response.data) {
+
+      await AddWallet({ amount: amount, productName: productName, order_id: order_id, payment_id})
       refetch();
       handleOrderCancelCloseModal();
+
     }
   };
 
@@ -156,6 +190,7 @@ const OrderHistory = () => {
   /**
    * Handle Retry
    */
+
   const handleRetry = async (amount, order_id, address) => {
     try {
       const isLoaded = await loadRazorpayScript();
@@ -183,6 +218,7 @@ const OrderHistory = () => {
                 razorpay_order_id: paymentResponse.razorpay_order_id,
                 signature: paymentResponse.razorpay_signature,
                 orderId,
+                cartSave,
               });
               console.log("verifyResponse", verifyResponse);
               if (verifyResponse.data) {
@@ -240,8 +276,8 @@ const OrderHistory = () => {
 
         <div className="space-y-4">
           {OrderData.length > 0 ? (
-            OrderData.map((order) => (
-              <Card key={`${order.productId}-${order.orderId}`}>
+            OrderData.map((order, index) => (
+              <Card key={index} >
                 <CardHeader
                   title={order.productName}
                   subheader={`Placed on: ${order.orderDate}`}
@@ -286,18 +322,26 @@ const OrderHistory = () => {
 
                     {order.payment_status == "Pending" &&
                     order.payment_Method == "razorpay" ? (
+                      
                       <Button
-                        onClick={() =>
+                        onClick={() =>{
+                          HandleCartsave(
+                            order.productId,
+                            order.quantity,
+                            order.price
+                          ),
                           handleRetry(
                             order.payableAmount,
                             order.orderItemId,
                             order.address_id
                           )
                         }
+                        }
                         variant="outlined"
                         color="success"
                       >
                         Retry
+                        <p> {order.price}/-</p>
                       </Button>
                     ) : (
                       order.status !== "Cancelled" &&
@@ -308,6 +352,9 @@ const OrderHistory = () => {
                               order_id: order.orderId,
                               product_id: order.productId,
                               quantity: order.quantity,
+                              productName: order.productName,
+                              payment_id: order.payment_id,
+                              amount: order.payableAmount
                             })
                           }
                           variant="outlined"
@@ -320,11 +367,22 @@ const OrderHistory = () => {
 
                     {order.status == "Delivered" && (
                       <Button
+                        // onClick={() =>
+                        //   handleOrderReturnOpenModal({
+                        //     order_id: order.orderId,
+                        //     product_id: order.productId,
+                        //     quantity: order.quantity,
+                        //     user_id: order.userId
+                        //   })
+                        // }
                         onClick={() =>
-                          handleOrderReturnOpenModal({
+                          handleOrderCancelOpenModal({
                             order_id: order.orderId,
                             product_id: order.productId,
                             quantity: order.quantity,
+                            productName: order.productName,
+                            payment_id: order.payment_id,
+                            amount: order.payableAmount
                           })
                         }
                         variant="outlined"
@@ -424,6 +482,9 @@ const OrderHistoryProductDetailes = () => {
   const [VerifyRetry] = useVerifyRetryMutation();
   const totalPage = data?.totalPage || 1;
 
+
+
+
   useEffect(() => {
     console.log("data ", data);
 
@@ -441,6 +502,7 @@ const OrderHistoryProductDetailes = () => {
             payment_status: item.payment_status || "N/A",
             payment_Method: item.payment_Method || "N/A",
             order_status: item.orderStatus || "N/A",
+            couponDiscount: item.discount || "00",
             address: `${order.address_id[0]?.address || "N/A"}, ${
               order.address_id[0]?.city || "N/A"
             }, ${order.address_id[0]?.state || "N/A"}, ${
@@ -466,6 +528,34 @@ const OrderHistoryProductDetailes = () => {
     console.log("Updated orderDetails:", orderDetails);
   }, [orderDetails]);
 
+
+
+  /**
+   * discount price 
+   */
+
+  const totalPrice = orderDetails.reduce(
+    (acc, item) => acc + (item.price - (item.couponDiscount || 0) / 100 * item.price),
+    0
+  );
+  
+  const totalDiscount = orderDetails.reduce(
+    (acc, item) => acc + ((item.couponDiscount || 0) / 100 * item.price),
+    0
+  );
+
+
+console.log("Total Discount Check:", totalDiscount);
+console.log("Order Price Check:",totalPrice);
+
+
+  // const totalPrice = orderDetails.price - (orderDetails.couponDiscount / 100) * orderDetails.price;
+  // const totalDiscount = totalPrice - orderDetails.price;
+  
+  // console.log('totalDiscount check check ', orderDetails.price)
+
+
+
   /**
    *  handle cancel modal
    */
@@ -481,7 +571,7 @@ const OrderHistoryProductDetailes = () => {
   };
 
   /**
-   * submit cansel order
+   * submit cancel order
    */
 
   const handleCancelOrder = async () => {
@@ -560,6 +650,7 @@ const OrderHistoryProductDetailes = () => {
   /**
    * Handle Retry
    */
+
   const handleRetry = async (amount, order_id, address) => {
     try {
       const isLoaded = await loadRazorpayScript();
@@ -627,7 +718,8 @@ const OrderHistoryProductDetailes = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
       transition={{ duration: 0.5 }}
-    >
+      >
+      {orderDetails.map((order, index) => (
       <Box sx={{ maxWidth: 900, mx: "auto", my: 4, p: 2 }}>
         {/* Back to Order History */}
         <Button
@@ -637,10 +729,10 @@ const OrderHistoryProductDetailes = () => {
         >
           ← Back to Order History
         </Button>
+        
 
         {/* Order Header */}
-        {orderDetails.length > 0 &&
-          orderDetails.map((order, index) => (
+        {/* {orderDetails.length > 0 && */}
             <Box
               sx={{
                 display: "flex",
@@ -669,10 +761,10 @@ const OrderHistoryProductDetailes = () => {
                 variant="outlined"
               />
             </Box>
-          ))}
 
-        {/* Items Section */}
-        {orderDetails.map((order, index) => (
+
+        {/* Items Section  */}
+
           <Card
             key={index}
             sx={{
@@ -709,7 +801,7 @@ const OrderHistoryProductDetailes = () => {
                     {order.productName}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Quantity: {order.quantity}
+                    Quantity: {order.quantity}, Price: ₹{order.price}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Payment: {order.payment_status}
@@ -721,10 +813,10 @@ const OrderHistoryProductDetailes = () => {
               </Box>
             </CardContent>
           </Card>
-        ))}
+
 
         {/* Order Summary */}
-        {orderDetails.map((order, index) => (
+
           <Card
             sx={{
               mb: 3,
@@ -756,7 +848,7 @@ const OrderHistoryProductDetailes = () => {
                   <TableRow>
                     <TableCell sx={{ color: "green" }}>Discount:</TableCell>
                     <TableCell align="right" sx={{ color: "green" }}>
-                      - ₹00.00
+                    - ₹{totalDiscount}.00
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -764,7 +856,7 @@ const OrderHistoryProductDetailes = () => {
                       Coupon Discount:
                     </TableCell>
                     <TableCell align="right" sx={{ color: "green" }}>
-                      - ₹00.00
+                    - {order.couponDiscount}.00 %
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -779,10 +871,10 @@ const OrderHistoryProductDetailes = () => {
               </Table>
             </CardContent>
           </Card>
-        ))}
+
         {/* Address */}
 
-        {orderDetails.map((order, index) => (
+
           <Card
             sx={{
               mb: 3,
@@ -810,11 +902,11 @@ const OrderHistoryProductDetailes = () => {
               </Typography> */}
             </CardContent>
           </Card>
-        ))}
+
 
 
         
-        {orderDetails.map((order, index) => (
+
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
             <Button
               onClick={() => handleDownload(order)}
@@ -884,8 +976,8 @@ const OrderHistoryProductDetailes = () => {
               </Button>
             )}
           </Box>
-        ))}
       </Box>
+        ))}
 
       {/* cancel order */}
       {selectedOrder && (
@@ -930,4 +1022,4 @@ const OrderDetailesPagination = ({ currentPage, totalPages, onPageChange }) => {
 
 export { OrderHistory, OrderHistoryProductDetailes };
 
-// export default OrderHistory
+

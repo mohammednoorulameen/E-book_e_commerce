@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Cart from "../../Models/CartModel.js";
 import Product from '../../Models/ProductModel.js'
+
+
 /**
  * add to cart
  */
@@ -93,6 +95,9 @@ const GetCartItems = async (req, res) => {
         $unwind: "$productDetailes",
       },
       {
+        $match: { "productDetailes.status": true },
+      },
+      {
         $project: {
           _id: 0,
           "items.quantity": 1,
@@ -106,6 +111,7 @@ const GetCartItems = async (req, res) => {
           "productDetailes.category": 1,
           "productDetailes.publisher": 1,
           "productDetailes.images": 1,
+          "productDetailes.status": 1,
           totalPrice: 1,
         },
       },

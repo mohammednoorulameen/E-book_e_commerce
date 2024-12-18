@@ -31,6 +31,13 @@ const CheckOut = () => {
   const navigate = useNavigate();
 console.log(cartItems);
 
+console.log('data', cart)
+
+
+const calculateTotal = () => {
+  return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+};
+
   /**
    * address
    */
@@ -42,19 +49,33 @@ console.log(cartItems);
     }
 
     if (cart) {
-      const transformedItems = cart.cartItems.map((cartItem) => ({
-        id: cartItem.productDetailes._id,
-        name: cartItem.productDetailes.productName,
-        price: parseFloat(cartItem.items.price), 
-        stock: cartItem.productDetailes.stock,
-        quantity: cartItem.items.quantity,
-        imageUrl:
+
+      // const filteredItems = cart.cartItems.filter((item)=> item.productDetailes.stock > 0)
+
+
+
+
+      // if (filteredItems.length > 0) {
+        
+        const transformedItems = cart.cartItems.map((cartItem) => ({
+          id: cartItem.productDetailes._id,
+          name: cartItem.productDetailes.productName,
+          price: parseFloat(cartItem.items.price), 
+          stock: cartItem.productDetailes.stock,
+          quantity: cartItem.items.quantity,
+          imageUrl:
           cartItem.productDetailes.images[0] ||
-          "https://via.placeholder.com/100", // Fallback image
-        totalPrice: cartItem.totalPrice,
-      }));
-      setCartItems(transformedItems);
-    }
+          "https://via.placeholder.com/100", 
+          totalPrice: cartItem.totalPrice,
+          status: cartItem.productDetailes.status
+          
+        }));
+        setCartItems(transformedItems);
+      }else{
+        console.log("no products available stock");
+        setCartItems([]);
+      }
+    // }
   }, [data]);
 
   /**
@@ -168,7 +189,7 @@ console.log('cartSave', cartSave.address_id)
                 Order Summary
               </h2>
               <div className="space-y-4">
-                {cartItems.map((item) => (
+                {  cartItems.map((item) => (
                   <div key={item.id} className="flex items-start gap-4">
                     <img
                       alt="Product thumbnail"
@@ -191,7 +212,8 @@ console.log('cartSave', cartSave.address_id)
 
                       <span>Subtotal</span>
                 
-                      <span>₹{cartItems[0]?.totalPrice || 0}.00</span>
+                      {/* <span>₹{cartItems[0]?.totalPrice || 0}.00</span> */}
+                      <span>₹{calculateTotal().toFixed(2)} .00</span>
 
                   
                     </div>
@@ -204,7 +226,8 @@ console.log('cartSave', cartSave.address_id)
                       <span>Total</span>
                       <div>
 
-                      <span>₹{cartItems[0]?.totalPrice || 0}.00</span>
+                      {/* <span>₹{cartItems[0]?.totalPrice || 0}.00</span> */}
+                      <span>₹{calculateTotal().toFixed(2)}.00</span>
 
 
                       </div>
@@ -299,12 +322,32 @@ console.log('cartSave', cartSave.address_id)
 
         {/* Action Buttons */}
         <div className="mt-8 space-y-4">
-          <button
+          {/* <button
             onClick={()=> {selectedAddress && HandleContinue()}}
-            className={`w-full bg-black text-white py-3 ${selectedAddress ? 'cursor-pointer' : 'cursor-not-allowed'} rounded-lg hover:bg-gray-800 active:scale-95 transition-all duration-300 ease-in-out`}
+            className={`w-full bg-black text-white py-3 ${  selectedAddress ? 'cursor-pointer' : 'cursor-not-allowed'} rounded-lg hover:bg-gray-800 active:scale-95 transition-all duration-300 ease-in-out`}
           >
            {selectedAddress ? "Continue" : "Select Your address"}
-          </button>
+          </button> */}
+
+<button
+  onClick={() => {
+    selectedAddress && HandleContinue();
+  }}
+  className={`w-full bg-black text-white py-3 ${
+    cartItems?.every((item) => item.stock >= item.quantity) && selectedAddress
+      ? "cursor-pointer"
+      : "cursor-not-allowed"
+  } rounded-lg hover:bg-gray-800 active:scale-95 transition-all duration-300 ease-in-out`}
+  disabled={
+    !cartItems?.every((item) => item.stock >= item.quantity) || !selectedAddress
+  }
+>
+  {cartItems?.every((item) => item.stock >= item.quantity) && selectedAddress
+    ? "Continue"
+    : "Select Your Address or Check Product Stock"}
+</button>
+
+
           <button
             onClick={HandleContinueShopping}
             className="w-full border border-black text-black py-3 rounded-lg hover:bg-gray-100 active:scale-95 transition-all duration-300 ease-in-out"

@@ -28,6 +28,7 @@ import CheckOutPage from "../Pages/User/CheckOutPage";
 import {FailedPaymentPage, NewOrderPaymentPage, PaymentSuccessPage} from "../Pages/User/PaymentsPage";
 import { elements } from "chart.js";
 import WhishlistPage from "../Pages/User/WhishlistPage";
+import Error from "../Components/Common/Error";
 
 
 const UserRouter = [
@@ -173,6 +174,11 @@ const UserRouter = [
       {
         path: "/whishlist",
         element : <WhishlistPage/>
+      },
+
+      {
+        path: "*",
+        element : <Error/>
       }
 
     ],

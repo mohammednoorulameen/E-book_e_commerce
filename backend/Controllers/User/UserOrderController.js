@@ -57,14 +57,6 @@ const PlaceOrder = async (req, res) => {
   const totalAmount = Math.round(totalPrice);
 
   try {
-    // if (!cartSave || !Array.isArray(cartSave) || cartSave.length === 0) {
-    //   return res.status(400).json({ message: "Cart is empty or invalid" });
-    // }
-
-    // if (!cartSave || !Array.isArray(cartSave) || cartSave.length === 0) {
-    //   return res.status(400).json({ message: "Cart is empty or invalid" });
-    // }
-
     if (paymentMethod === "cashOnDelivery") {
       let order = await Orders.findOne({ user_id });
       console.log("Existing Order:", order);
@@ -75,8 +67,8 @@ const PlaceOrder = async (req, res) => {
           console.log("Processing Cart Item:", cartItem);
           const offerApplied = await getOffer(cartItem.product_id);
           const payableAmount =
-            cartItem.price -
-            ((offerApplied + discountApplied) / 100) * cartItem.price;
+            cartItem.totalPrice -
+            ((offerApplied + discountApplied) / 100) * cartItem.totalPrice;
           console.log(
             "Offer Applied:",
             offerApplied,
@@ -84,7 +76,6 @@ const PlaceOrder = async (req, res) => {
             payableAmount,
             paymentMethod
           );
-          console.log('cash on delivery paymentMethod', paymentMethod)
    
           return {
             product_id: cartItem.product_id,
@@ -191,7 +182,6 @@ const VerifyPayment = async (req, res) => {
       couponDiscount,
       paymentMethod
     } = req.body;
-
     const secret = process.env.RAZORPAY_KEY_SECRET;
 
     const discountApplied = couponDiscount / cartSave.length;
@@ -200,9 +190,12 @@ const VerifyPayment = async (req, res) => {
     const itemsWithOffers = await Promise.all(
       cartSave.map(async (cartItem) => {
         const offerApplied = await getOffer(cartItem.product_id);
+        console.log("check payable amount ",cartItem.totalPrice)
         const payableAmount =
-          cartItem.price -
-          ((offerApplied + discountApplied) / 100) * cartItem.price;
+          cartItem.totalPrice -
+          ((offerApplied + discountApplied) / 100) * cartItem.totalPrice;
+
+          console.log('check order payableAmount', payableAmount)
 
         return {
           product_id: cartItem.product_id,
@@ -227,8 +220,8 @@ const VerifyPayment = async (req, res) => {
         cartSave.map(async (cartItem) => {
           const offerApplied = await getOffer(cartItem.product_id);
           const payableAmount =
-            cartItem.price -
-            ((offerApplied + discountApplied) / 100) * cartItem.price;
+            cartItem.totalPrice -
+            ((offerApplied + discountApplied) / 100) * cartItem.totalPrice;
 
           return {
             product_id: cartItem.product_id,
@@ -306,8 +299,6 @@ const failedPayment = async (req, res) => {
   try {
     const user_id = req.userId;
     const { couponDiscount, cartSave, payment_id, paymentMethod, address_id } = req.body;
-    console.log('payment_Method', payment_id)
-
 
     if (!cartSave || !Array.isArray(cartSave) || cartSave.length === 0) {
       return res.status(400).json({ message: "Invalid cart data" });
@@ -318,7 +309,6 @@ const failedPayment = async (req, res) => {
 
     const discountApplied = couponDiscount / cartSave.length;
     let order = await Orders.findOne({ user_id });
-    console.log("Order found:", order);
 
     if (order) {
       // Update existing order
@@ -351,7 +341,6 @@ const failedPayment = async (req, res) => {
 
       order.items.push(...OrderItemsWithOffers);
       await order.save();
-      console.log("Updated order:", order);
     } else {
       // Create a new order
       const OrderItemsWithOffers = await Promise.all(
@@ -417,7 +406,6 @@ const failedPayment = async (req, res) => {
 const retryingPayment = async (req, res) => {
   try {
     const {order_id, amount  } = req.body;
-    console.log('amount, order_id', amount, order_id)
 
     const options = {
       amount: amount * 100,
@@ -425,9 +413,7 @@ const retryingPayment = async (req, res) => {
       receipt: `receipt_${new Date().getTime()}`,
     };
 
-    console.log('options', options)
     const order = await razorpayInstance.orders.create(options);
-    console.log('check order', order)
     res.status(200).json({ order, order_id });
   } catch (error) {
     res.status(500).json({ message: "server error" });
@@ -438,27 +424,30 @@ const retryingPayment = async (req, res) => {
  * verify trying payment
  */
 
+
 const verifyRetry = async (req, res) => {
   try {
-    const { payment_id, razorpay_order_id, signature, orderId } = req.body;
+    const { payment_id, razorpay_order_id, signature, orderId, cartSave } = req.body;
+    console.log('cartSave check check this ', cartSave)
+    console.log('orderId check check this ', orderId)
     const user_id = req.userId;
     const secret = process.env.RAZORPAY_KEY_SECRET;
-
-    console.log(' payment_id, razorpay_order_id, signature, orderId', 
-      payment_id, razorpay_order_id, signature, orderId
-    )
 
     const generatedSignature = crypto
       .createHmac("sha256", secret)
       .update(`${razorpay_order_id}|${payment_id}`)
       .digest("hex");
-      
-      const matchedOrder = await Orders.findOne({ user_id: user_id, "items._id": orderId });
-      console.log("Matched Order Before Update:", matchedOrder);
-      
+
+    // const matchedOrder = await Orders.findOne({
+    //   user_id: user_id,
+    //   "items._id": orderId,
+    // });
+    // console.log("Matched Order Before Update:", matchedOrder);
+
     if (generatedSignature === signature) {
-      console.log("check 1 "),
-      
+      console.log("Signature matched, processing payment and stock update");
+
+      // Update order payment status
       await Orders.updateOne(
         { user_id: user_id, "items._id": orderId },
         {
@@ -468,19 +457,55 @@ const verifyRetry = async (req, res) => {
           },
         }
       );
-     
-      res
-        .status(200)
-        .json({ success: true, message: "Payment verified successfully" });
+
+      console.log("ffscdcdfcwaecscasdtgyhtne33e4r5tgyhtnbg ")
+      // Update cart and stock
+      await Promise.all(
+        cartSave.map(async (cartItem) => {
+          try {
+            // Remove item from the cart
+            // await Cart.findOneAndUpdate(
+            //   { user_id },
+            //   { $pull: { items: { product_id: cartItem.product_id } } }
+            // );
+
+            console.log("check check check check check check check")
+
+            // Reduce product stock
+            await Products.findOneAndUpdate(
+              { _id: cartItem.product_id },
+              { $inc: { stock: -cartItem.quantity } }
+            );
+          } catch (error) {
+            console.error(
+              `Error updating cart or stock for ${cartItem.product_id}:`,
+              error
+            );
+            throw error;
+          }
+        })
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Payment verified successfully, stock updated",
+      });
     } else {
-      res
-        .status(400)
-        .json({ success: true, message: "Payment verified failed" });
+      console.log("Signature verification failed");
+      res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+      });
     }
   } catch (error) {
-    console.log(error);
+    console.error("Error in payment verification:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
+
 
 /**
  * get order detailes
@@ -557,6 +582,7 @@ const CancelOrder = async (req, res) => {
   try {
     const user_id = req.userId;
     const { product_id, quantity, order_id } = req.body;
+    // console.log('product_id, quantity, order_id', product_id, quantity, order_id)
     const order = await Orders.findOneAndUpdate(
       { user_id: user_id, _id: order_id, "items.product_id": product_id },
       { $set: { "items.$.orderStatus": "Cancelled" } },
@@ -575,6 +601,107 @@ const CancelOrder = async (req, res) => {
   }
 };
 
+
+
+
+/**
+ * User home Page getting top ten products
+ */
+
+const GetTopTenProducts = async (req, res) => {
+  try {
+    const topProducts = await Orders.aggregate([
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.product_id",
+          orderCount: { $sum: 1 },
+          totalQuantitySelled: { $sum: "$items.quantity" },
+          totalRevenue: { $sum: "$items.payableAmount" },
+        },
+      },
+      { $sort: { totalQuantitySelled: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $project: {
+          _id: 0,
+          productId: "$_id",
+          productName: "$productDetails.productName",
+          category: "$productDetails.category",
+          author: "$productDetails.author",
+          image: "$productDetails.images",
+          price: "$productDetails.price"
+
+        },
+      },
+    ]);
+    res.status(200).json({ message: "success", topProducts });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ message: "internal server error" });
+  }
+};
+
+/**
+ * User home page getting top category
+ */
+
+const TopCategory = async (req, res) => {
+  try {
+    const topCategory = await Orders.aggregate([
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product_id",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $group: {
+          _id: "$productDetails.category",
+          totalOrder: { $sum: 1 },
+          totalQuantitySelled: { $sum: "$items.quantity" },
+          totalRevenue: { $sum: "$items.payableAmount" },
+        },
+      },
+      { $sort: { totalQuantitySelled: -1 } },
+      { $limit: 10 },
+      {
+        $project: {
+          _id: 0,
+          category: "$_id",
+          totalOrder: 1,
+          totalQuantitySelled: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    console.log('topCategory check check', topCategory)
+
+    res
+      .status(200)
+      .json({ message: "Get top category successful", topCategory });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: "Internal server error" });
+  }
+};
+
+
+
 export {
   PlaceOrder,
   getOrders,
@@ -583,4 +710,7 @@ export {
   failedPayment,
   retryingPayment,
   verifyRetry,
+  GetTopTenProducts,
+  TopCategory,
+  
 };

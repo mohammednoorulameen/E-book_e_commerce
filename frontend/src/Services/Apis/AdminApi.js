@@ -258,6 +258,13 @@ export const adminApi = createApi({
       providesTags: ['getSalesReport'],
     }),
 
+
+    GetPlainSalesReport: builder.query({
+      query: () =>
+        `/get-sales-report`,
+      providesTags: ['getSalesReport'],
+    }),
+
     /**
      * get top  products
      */
@@ -309,6 +316,7 @@ export const {
   useGetOfferQuery,
   useBlockfferMutation,
   useGetSalesReportQuery,
+  useGetPlainSalesReportQuery,
   useGetTopProductsQuery,
   useGetTopCategoryQuery,
   useGetGraphDataQuery,

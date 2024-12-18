@@ -34,6 +34,8 @@ import {
   failedPayment,
   retryingPayment,
   verifyRetry,
+  GetTopTenProducts,
+  TopCategory,
 } from "../Controllers/User/UserOrderController.js";
 import {
   ActiveCoupons,
@@ -65,6 +67,9 @@ userRouter.get("/get-order-items", VerifyToken, getOrders);
 userRouter.get("/active-coupons", VerifyToken, ActiveCoupons);
 userRouter.get("/get-whishlist", VerifyToken, whishList);
 userRouter.get("/get-wallet", VerifyToken, getWallet);
+userRouter.get("/get-top-category", TopCategory);
+userRouter.get("/get-top-products", GetTopTenProducts);
+
 
 /**
  * POST

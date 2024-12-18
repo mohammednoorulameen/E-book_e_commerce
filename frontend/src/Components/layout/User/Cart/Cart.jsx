@@ -14,6 +14,8 @@ const Cart = () => {
   const { data:cart,refetch} = useGetCartItemsQuery()
   const [DeleteCartItem] = useDeleteCartItemMutation()
 
+  console.log('cart', cart)
+
   /**
    * cart detailes
    */
@@ -27,7 +29,8 @@ const Cart = () => {
         quantity: cartItem.items.quantity,
         stock: cartItem.productDetailes.stock,
         imageUrl: cartItem.productDetailes.images[0] || "https://via.placeholder.com/100", 
-        totalPrice: cartItem.totalPrice
+        totalPrice: cartItem.totalPrice,
+        status: cartItem.productDetailes.status
       }));
       setCartItems(transformedItems);
       const outOfStock = cart.cartItems?.some((cartItems) => cartItems.productDetailes.stock < cartItems.items.quantity)

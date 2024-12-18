@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -30,20 +32,71 @@ import {
   useGetTopProductsQuery,
   useGetTopCategoryQuery,
   useGetGraphDataQuery,
+  useGetUserListQuery,
+  useGetPlainSalesReportQuery
 } from "../../../../Services/Apis/AdminApi";
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ }) => {
+
+
   const [topProducts, setTopProducts] = useState([]);
   const [topCategories, setTopCategories] = useState([]);
   const [period, setPeriod] = useState('daily')
   const [ GraphData, setGraphData] = useState([])
+  const [totalUsers, setTotalUsers] = useState(0);
+    const [totalDiscount, setTotalDiscount] = useState(0);
+    const [totalSales, setTotalSales] = useState(0);
+    const [revenue, setRevenue] = useState(0);
+    const [totalOrders, setTotalOrders] = useState(0);
   const { data } = useGetTopProductsQuery();
   const { data: salesData} = useGetGraphDataQuery({ period });
   const { data: topCategory } = useGetTopCategoryQuery();
-  
-  console.log("check top ten salesData", period);
+  const { data: usersList } = useGetUserListQuery({
+      page: 1,
+      limit: 10,
+    });
+   const { data:salesReport } = useGetPlainSalesReportQuery();
+
+    console.log('salesReportsalesReport', salesReport)
 
   useEffect(() => {
+
+    /**
+     * get sales datas
+     */
+
+    if (salesReport) {     
+      
+      const totalAmount = salesReport.salesReport.reduce(
+        (acc, items) => acc + items.items.price,
+        0
+      );
+
+      const revenue = salesReport.salesReport.reduce(
+        (acc, salesData) => acc + (salesData.items?.payableAmount || 0),
+        0
+      );
+
+
+
+      const totalDiscount = totalAmount - revenue;
+      setTotalOrders(salesReport.salesReport.length);
+      setTotalDiscount(totalDiscount);
+      setRevenue(revenue);
+      setTotalSales(totalAmount);
+
+    }
+
+
+   
+
+    /**
+     * get user
+     */
+
+    if (usersList) {
+      setTotalUsers(usersList.totalUsers);
+    }
 
     /**
      * get top products 
@@ -120,31 +173,31 @@ const AdminDashboard = () => {
   
   return (
     <Box p={3}>
-      <h2 className="text-3xl font-semibold mb-5">Admin Dashboard</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <h2 className="text-3xl font-semibold mb-5">Admin Dashboard</h2>
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardWidget
           icon={<FaShoppingCart />}
           title="Total Orders"
-          value={12}
+          value={totalOrders}
           color="text-blue-500"
         />
         <DashboardWidget
           icon={<FaUserFriends />}
           title="Total Users"
-          value={12}
+          value={totalUsers}
           color="text-green-500"
         />
         <DashboardWidget
           icon={<FaDollarSign />}
           title="Revenue"
-          value={12}
+          value={`₹${revenue}`}
           color="text-yellow-500"
         />
         <DashboardWidget
           icon={<FaChartLine />}
           title="Total Sales"
-          value={12}
+          value={`₹${totalSales}`}
           color="text-purple-500"
         />
       </div>

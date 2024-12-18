@@ -43,7 +43,7 @@ export default function Header() {
   const debouncedQuery = useDebounce(searchQuery, 500);
   const { data: whishlist } = useGetWhishlistQuery();
 
-  console.log("allProducts", whishlist);
+
   // Calculate total count of items in cart
   const itemCount =
     cart?.cartItems?.reduce((total, item) => total + item.items.quantity, 0) ||
@@ -54,7 +54,7 @@ export default function Header() {
    */
 
   const whishLisitemCount = whishlist?.items?.length || 0;
-  console.log("Total items in wishlist:", whishLisitemCount);
+
 
   /**
    * setting user data
@@ -298,19 +298,6 @@ export default function Header() {
                 <span className="text-xs">Explore</span>
               </Link>
 
-              {/* Wishlist Icon */}
-              <Link
-                to={"/wishlist"}
-                className="flex flex-col items-center gap-1 text-gray-800"
-              >
-                {userData ? (
-                  <FaHeart className="w-5 h-5" />
-                ) : (
-                  <HeartIcon className="w-5 h-5" />
-                )}
-                <span className="text-xs">Wishlist</span>
-              </Link>
-
               {/* Login Icon */}
               <div className="relative group">
                 <button className="flex flex-col items-center gap-1 text-gray-800">
@@ -353,14 +340,14 @@ export default function Header() {
                   )}
 
                   <Link
-                    to="/wishlist"
+                    to="/whishlist"
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
                   >
                     <FaHeart />
                     <span>Wishlist</span>
                   </Link>
                   <Link
-                    to="/orders"
+                    to="/account/orders"
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
                   >
                     <FaClipboardList />
@@ -368,6 +355,19 @@ export default function Header() {
                   </Link>
                 </div>
               </div>
+
+              {/* Wishlist Icon */}
+              <Link
+                to={"/whishlist"}
+                className="flex flex-col items-center gap-1 text-gray-800"
+              >
+                {userData ? (
+                  <FaHeart className="w-5 h-5" />
+                ) : (
+                  <HeartIcon className="w-5 h-5" />
+                )}
+                <span className="text-xs">Wishlist</span>
+              </Link>
 
               {/* Cart Icon */}
               <Link
